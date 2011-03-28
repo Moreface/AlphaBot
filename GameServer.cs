@@ -50,13 +50,13 @@ namespace CSharpClient
             //Initialize the game's data
 
             Console.Write("{0}: [D2GS] Connecting to Game Server {1}:{2} .......",m_owner.Account,m_owner.GsIp,s_gsPort);
-            m_gsSocket.Connect(m_owner.GsIp, s_gsPort);
-            m_gsStream = m_gsSocket.GetStream();
-            if (m_gsStream.CanWrite)
+            try
             {
+                m_gsSocket.Connect(m_owner.GsIp, s_gsPort);
+                m_gsStream = m_gsSocket.GetStream();
                 Console.WriteLine(" Connected");
             }
-            else
+            catch
             {
                 Console.WriteLine(" Failed To connect");
                 return;

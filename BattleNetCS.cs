@@ -418,7 +418,7 @@ namespace CSharpClient
             m_stream.Write(packet, 0, packet.Length);
         }
 
-        public void ThreadFunction()
+        public override void ThreadFunction()
         {
             m_owner.GameRequestId = 0x02;
             m_owner.InGame = false;
