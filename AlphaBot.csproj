@@ -58,6 +58,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AdvancedCheckRevision.cs" />
     <Compile Include="BattleNetCS.cs" />
     <Compile Include="Bsha1.cs" />
     <Compile Include="CdKey.cs" />

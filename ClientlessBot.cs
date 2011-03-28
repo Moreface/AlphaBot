@@ -75,15 +75,15 @@ namespace CSharpClient
             set { m_gsIp = value; }
         }
 
-        private ArrayList m_gsHash;
-        public ArrayList GsHash
+        private List<byte> m_gsHash;
+        public List<byte> GsHash
         {
             get { return m_gsHash; }
             set { m_gsHash = value; }
         }
 
-        private ArrayList m_gsToken;
-        public ArrayList GsToken
+        private List<byte> m_gsToken;
+        public List<byte> GsToken
         {
             get { return m_gsToken; }
             set { m_gsToken = value; }
@@ -102,8 +102,8 @@ namespace CSharpClient
             set { m_mcpIp= value; }
         }
 
-        private ArrayList m_mcpData;
-        public ArrayList McpData
+        private List<byte> m_mcpData;
+        public List<byte> McpData
         {
             get { return m_mcpData; }
             set { m_mcpData = value; }
@@ -219,9 +219,11 @@ namespace CSharpClient
 
         public BattleNetCS m_bncs;
         public RealmServer m_mcp;
+        public GameServer m_gs;
         private Thread m_bncsThread;
         private Thread m_mcpThread;
         private Thread m_gameCreationThread;
+        private Thread m_gsThread;
 
         private Boolean m_firstGame;
         public Boolean FirstGame
@@ -237,24 +239,24 @@ namespace CSharpClient
             set { m_failedGame = value; }
         }
 
+        private Boolean m_connectedToGs;
+        public Boolean ConnectedToGs
+        {
+            get { return m_connectedToGs; }
+            set { m_connectedToGs = value; }
+        }
+
         ClientlessBot()
         {
-            m_battleNetServer = "useast.battle.net";
-            m_account = "";
-            m_password = "";
-            m_binaryDirectory = "data\\";
-            m_gameExeInformation = "Game.exe 03/09/10 04:10:51 61440";
-            m_classicKey = "";
-            m_expansionKey = "";
-            m_keyOwner = "DK";
-            m_difficulty = GameDifficulty.NORMAL;
-            m_gamePassword = "";
+
 
             m_bncs = new BattleNetCS(this);
             m_mcp = new RealmServer(this);
+            m_gs = new GameServer(this);
             m_bncsThread = new Thread(m_bncs.BncsThreadFunction);
             m_mcpThread = new Thread(m_mcp.McpThreadFunction);
             m_gameCreationThread = new Thread(m_mcp.CreateGameThreadFunction);
+            m_gsThread = new Thread(m_gs.GameServerThreadFunction);
             m_bncsThread.Start();
         }
         ~ClientlessBot()
@@ -276,11 +278,7 @@ namespace CSharpClient
 
         public void StartGameServerThread()
         {
-        }
-
-        public void JoinGame()
-        {
-            Console.WriteLine(" ATTEMPTING TO JOIN GAME, NOT IMPLEMENTED");
+            m_gsThread.Start();
         }
 
         static void Main(string[] args)

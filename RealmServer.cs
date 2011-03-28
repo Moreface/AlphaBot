@@ -49,7 +49,7 @@ namespace CSharpClient
             m_mcpSocket = new TcpClient();
         }
 
-        private bool getMcpPacket(ref NetworkStream mcpStream, ref ArrayList mcpBuffer, ref ArrayList data)
+        private bool getMcpPacket(ref NetworkStream mcpStream, ref List<byte> mcpBuffer, ref List<byte> data)
         {
             while (mcpBuffer.Count < 3)
             {
@@ -97,17 +97,17 @@ namespace CSharpClient
             if (ClientlessBot.debugging)
                 Console.WriteLine("");
 
-            data = new ArrayList(mcpBuffer.GetRange(0, packetLength));
+            data = new List<byte>(mcpBuffer.GetRange(0, packetLength));
             mcpBuffer.RemoveRange(0, packetLength);
             return true;
         }
 
-        private byte[] BuildPacket(byte command, params ICollection[] args)
+        private byte[] BuildPacket(byte command, params IEnumerable<byte>[] args)
         {
-            ArrayList packet = new ArrayList();
+            List<byte> packet = new List<byte>();
 
-            ArrayList packetArray = new ArrayList();
-            foreach (ICollection a in args)
+            List<byte> packetArray = new List<byte>();
+            foreach (IEnumerable<byte> a in args)
             {
                 packetArray.AddRange(a);
             }
@@ -122,7 +122,7 @@ namespace CSharpClient
             return bytes;
         }
 
-        private delegate void PacketHandler(byte type, ArrayList data, byte[] dataBytes);
+        private delegate void PacketHandler(byte type, List<byte> data);
 
         private PacketHandler DispatchPacket(byte type)
         {
@@ -145,9 +145,9 @@ namespace CSharpClient
             }
         }
 
-        private void GameCreate(byte type, ArrayList data, byte[] dataBytes)
+        private void GameCreate(byte type, List<byte> data)
         {
-            UInt32 result = BitConverter.ToUInt32(dataBytes, 9);
+            UInt32 result = BitConverter.ToUInt32(data.ToArray(), 9);
             switch (result) {
 				case 0x00:
 					if (ClientlessBot.debugging) Console.WriteLine("{0}: [MCP] Game has been created successfully",m_owner.Account);
@@ -177,9 +177,9 @@ namespace CSharpClient
 			}
         }
 
-        private void GameJoin(byte type, ArrayList data, byte[] dataBytes)
+        private void GameJoin(byte type, List<byte> data)
         {
-            UInt32 result = BitConverter.ToUInt32(dataBytes, 17);
+            UInt32 result = BitConverter.ToUInt32(data.ToArray(), 17);
 
 			switch(result) {
 				case 0x00:
@@ -229,7 +229,7 @@ namespace CSharpClient
 			}
 
 			if (result == 0) {
-				UInt32 ip = BitConverter.ToUInt32(dataBytes, 9);
+                UInt32 ip = BitConverter.ToUInt32(data.ToArray(), 9);
 				m_owner.GsIp = IPAddress.Parse(ip.ToString());
 				m_owner.GsHash = data.GetRange(13, 4);
 				m_owner.GsToken = data.GetRange(5, 2);
@@ -243,9 +243,9 @@ namespace CSharpClient
 			}
         }
 
-        private void LoginResult(byte type, ArrayList data, byte[] dataBytes)
+        private void LoginResult(byte type, List<byte> data)
         {
-            UInt32 result = BitConverter.ToUInt32(dataBytes, 3);
+            UInt32 result = BitConverter.ToUInt32(data.ToArray(), 3);
             if (result != 0)
             {
                 Console.WriteLine("{0}: [MCP] Failed to log into character {1}", m_owner.Account, m_owner.Character);
@@ -273,9 +273,9 @@ namespace CSharpClient
             m_owner.Status= ClientlessBot.ClientStatus.STATUS_NOT_IN_GAME;
         }
 
-        private void CharacterList(byte type, ArrayList data, byte[] dataBytes)
+        private void CharacterList(byte type, List<byte> data)
         {
-            UInt16 count = BitConverter.ToUInt16(dataBytes, 9);
+            UInt16 count = BitConverter.ToUInt16(data.ToArray(), 9);
             if (count == 0)
             {
                 Console.WriteLine("{0}: [MCP] There are no characters on this account", m_owner.Account);
@@ -292,11 +292,11 @@ namespace CSharpClient
                 for (int i = 1; i <= count; i++)
                 {
                     offset += 4;
-                    String dataString = System.Text.Encoding.ASCII.GetString(dataBytes);
+                    String dataString = System.Text.Encoding.ASCII.GetString(data.ToArray());
                     String characterName = Utils.readNullTerminatedString(dataString, ref offset);
                     int oldoffset = offset;
                     String stats = Utils.readNullTerminatedString(dataString, ref offset);
-                    ArrayList statList = data.GetRange(oldoffset, offset - oldoffset);
+                    List<byte> statList = data.GetRange(oldoffset, offset - oldoffset);
                     // This section needs to be finished to gather character info
                     /*
                      *
@@ -333,9 +333,9 @@ namespace CSharpClient
             }
         }
 
-        private void LoginRealm(byte type, ArrayList data, byte[] dataBytes)
+        private void LoginRealm(byte type, List<byte> data)
         {
-            UInt32 result = BitConverter.ToUInt32(dataBytes, 3);
+            UInt32 result = BitConverter.ToUInt32(data.ToArray(), 3);
             switch (result)
             {
                 case 0x00:
@@ -371,7 +371,7 @@ namespace CSharpClient
 
         }
 
-        private void VoidRequest(byte type, ArrayList data, byte[] dataBytes)
+        private void VoidRequest(byte type, List<byte> data)
         {
             Console.WriteLine("{0}: [MCP] Unknown Packet Received... Ignoring packet type: {1:X} ...", m_owner.Account,type);
         }
@@ -379,6 +379,8 @@ namespace CSharpClient
         public void CreateGameThreadFunction()
         {
             while (true) {
+
+                //Replace this with mutex  or semaphore
 		        while (m_owner.Status != ClientlessBot.ClientStatus.STATUS_NOT_IN_GAME)
 			        System.Threading.Thread.Sleep(1000);
 
@@ -441,20 +443,33 @@ namespace CSharpClient
             }
             m_mcpStream.WriteByte(0x01);
             byte[] packet = BuildPacket((byte)0x01, m_owner.McpData);
+
+            if (ClientlessBot.debugging)
+            {
+                Console.WriteLine("\tWriting to Stream: ");
+                for (int i = 0; i < packet.Length; i++)
+                {
+                    if (i % 8 == 0 && i != 0)
+                        Console.Write(" ");
+                    if (i % 16 == 0 && i != 0)
+                        Console.WriteLine("");
+                    Console.Write("{0:X2} ", packet[i]);
+                }
+                Console.WriteLine("");
+            }
+
             m_mcpStream.Write(packet, 0, packet.Length);
 
-            ArrayList data = new ArrayList();
-            ArrayList mcpBuffer = new ArrayList();
+            List<byte> data = new List<byte>();
+            List<byte> mcpBuffer = new List<byte>();
             while (true)
             {
                 if (!getMcpPacket(ref m_mcpStream, ref mcpBuffer, ref  data))
                     break;
-                byte[] dataBytes = new byte[data.Count];
-                data.CopyTo(dataBytes);
 
-                byte identifier = dataBytes[2];
+                byte identifier = data.ToArray()[2];
 
-                DispatchPacket(identifier)(identifier, data, dataBytes);
+                DispatchPacket(identifier)(identifier, data);
             }
             Console.WriteLine("{0}: [MCP] Disconnected from Realm Server", m_owner.Account);
         }

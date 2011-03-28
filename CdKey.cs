@@ -77,7 +77,7 @@ namespace CSharpClient
                 return (ulong)(input - 0x37);
         }
 
-        public static bool GetD2KeyHash(string cdkey, ref uint client_token, uint server_token, ref ArrayList output, ref  ArrayList public_value)
+        public static bool GetD2KeyHash(string cdkey, ref uint client_token, uint server_token, ref List<byte> output, ref  List<byte> public_value)
         {
             ulong checksum = 0;
             ulong n, n2, v, v2;
@@ -169,9 +169,9 @@ namespace CSharpClient
             string hexString = manipulatedKey.Substring(2, 6);
             UInt32 num = UInt32.Parse(hexString, System.Globalization.NumberStyles.HexNumber);
 
-            public_value = new ArrayList(BitConverter.GetBytes(num));
+            public_value = new List<byte>(BitConverter.GetBytes(num));
 
-            ArrayList hashData = new ArrayList(BitConverter.GetBytes(client_token));
+            List<byte> hashData = new List<byte>(BitConverter.GetBytes(client_token));
             hashData.AddRange(BitConverter.GetBytes(server_token));
 
 

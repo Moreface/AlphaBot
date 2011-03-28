@@ -114,7 +114,7 @@ namespace CSharpClient
 
 
 
-        public static ArrayList GetHash(ArrayList input)
+        public static List<byte> GetHash(List<byte> input)
         {
             uint[] buffer = new uint[21];
             buffer[0] = 0x67452301;
@@ -150,23 +150,23 @@ namespace CSharpClient
 
             }
 
-            ArrayList op = new ArrayList();
+            List<byte> op = new List<byte>();
             for (uint i = 0; i < buffer.Length; i++)
                 for (uint j = 0; j < 4; j++)
                     op.Add(getBufferByte(buffer, (int)(i * 4 + j)));
-            return new ArrayList(op.GetRange(0,20));
+            return new List<byte>(op.GetRange(0,20));
         }
 
-        public static ArrayList DoubleHash(UInt32 client_token, UInt32 server_token, string password)
+        public static List<byte> DoubleHash(UInt32 client_token, UInt32 server_token, string password)
         {
             byte[] pv = System.Text.Encoding.UTF8.GetBytes(password);
-	        ArrayList password_hash = GetHash(new ArrayList(pv));
+	        List<byte> password_hash = GetHash(new List<byte>(pv));
 
-            ArrayList final_input = new ArrayList(BitConverter.GetBytes((UInt32)client_token));
+            List<byte> final_input = new List<byte>(BitConverter.GetBytes((UInt32)client_token));
             final_input.AddRange(BitConverter.GetBytes((UInt32)server_token));
 	        final_input.AddRange(password_hash);
 
-	        ArrayList output = GetHash(final_input);
+	        List<byte> output = GetHash(final_input);
 
 	        return output;
         }

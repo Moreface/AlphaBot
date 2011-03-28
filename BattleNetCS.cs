@@ -58,7 +58,7 @@ namespace CSharpClient
             m_bncsSocket = new TcpClient();
         }
 
-        private bool getBncsPacket(ref NetworkStream bncsStream, ref ArrayList bncsBuffer, ref ArrayList data)
+        private bool getBncsPacket(ref NetworkStream bncsStream, ref List<byte> bncsBuffer, ref List<byte> data)
         {
             while (bncsBuffer.Count < 4)
             {
@@ -105,7 +105,7 @@ namespace CSharpClient
             }
             if (ClientlessBot.debugging)
                 Console.WriteLine("");
-            data = new ArrayList(bncsBuffer.GetRange(0, packetLength));
+            data = new List<byte>(bncsBuffer.GetRange(0, packetLength));
             bncsBuffer.RemoveRange(0, packetLength);
             return true;
         }
@@ -115,13 +115,13 @@ namespace CSharpClient
             m_bncsStream.Write(packet, 0, packet.Length);
         }
 
-        public byte[] BuildPacket(byte command, params ICollection[] args)
+        public byte[] BuildPacket(byte command, params IEnumerable<byte>[] args)
         {
-            ArrayList packet = new ArrayList();
+            List<byte> packet = new List<byte>();
             packet.Add((byte)0xFF);
             packet.Add((byte)command);
-            ArrayList packetArray = new ArrayList();
-            foreach (ICollection a in args)
+            List<byte> packetArray = new List<byte>();
+            foreach (IEnumerable<byte> a in args)
             {
                 packetArray.AddRange(a);
             }
@@ -136,7 +136,7 @@ namespace CSharpClient
             return bytes;
         }
 
-        private delegate void PacketHandler(ulong type, ArrayList data, byte[] dataBytes);
+        private delegate void PacketHandler(ulong type, List<byte> data);
 
         private PacketHandler DispatchPacket(ulong type)
         {
@@ -157,15 +157,15 @@ namespace CSharpClient
             }
         }
 
-        private void HandleAdvertising(ulong type, ArrayList data, byte[] dataBytes)
+        private void HandleAdvertising(ulong type, List<byte> data)
         {
-            UInt32 ad_id = BitConverter.ToUInt32(dataBytes, 4);
+            UInt32 ad_id = BitConverter.ToUInt32(data.ToArray(), 4);
             if (ClientlessBot.debugging) Console.WriteLine("{0}: [BNCS] Received advertising data, sending back display confirmation", m_owner.Account);
             byte[] packet = BuildPacket((byte)0x21, System.Text.Encoding.ASCII.GetBytes(platform), System.Text.Encoding.ASCII.GetBytes(lod_id), BitConverter.GetBytes(ad_id), zero, zero);
             m_bncsStream.Write(packet, 0, packet.Length);
         }
 
-        private void EnterChat(ulong type, ArrayList data, byte[] dataBytes)
+        private void EnterChat(ulong type, List<byte> data)
         {
             Console.WriteLine("{0}: [BNCS] Entered the chat.", m_owner.Account);
             byte[] packeta = {0xFF, 0x46, 0x04, 0x00 };
@@ -181,30 +181,30 @@ namespace CSharpClient
             return (UInt16)((value & 0xFFU) << 8 | (value & 0xFF00U) >> 8);
         }
 
-        private void StartMcp(ulong type, ArrayList data, byte[] dataBytes)
+        private void StartMcp(ulong type, List<byte> data)
         {
-            if (dataBytes.Length <= 12)
+            if (data.Count<= 12)
             {
                 Console.WriteLine("{0}: [BNCS] Failed to log on to realm:", m_owner.Account); ;
 				return;
 			}
 
-            UInt32 ip = (uint)IPAddress.NetworkToHostOrder((int)BitConverter.ToUInt32(dataBytes, 20));
-            m_owner.McpPort = ReverseBytes(BitConverter.ToUInt16(dataBytes, 24));
+            UInt32 ip = (uint)IPAddress.NetworkToHostOrder((int)BitConverter.ToUInt32(data.ToArray(), 20));
+            m_owner.McpPort = ReverseBytes(BitConverter.ToUInt16(data.ToArray(), 24));
             
             m_owner.McpIp = IPAddress.Parse(ip.ToString());
 
             Int32 offset = 28;
-            ArrayList temp = new ArrayList(data.GetRange(4,16));
+            List<byte> temp = new List<byte>(data.GetRange(4,16));
             temp.AddRange(data.GetRange(offset, data.Count - offset));
             m_owner.McpData = temp;
 
             m_owner.StartMcpThread();
         }
 
-        private void RealmList(ulong type, ArrayList data, byte[] dataBytes)
+        private void RealmList(ulong type, List<byte> data)
         {
-            UInt32 count = BitConverter.ToUInt32(dataBytes, 8);
+            UInt32 count = BitConverter.ToUInt32(data.ToArray(), 8);
 			Int32 offset = 12;
 			
             if (ClientlessBot.debugging) 
@@ -213,8 +213,8 @@ namespace CSharpClient
 			for(ulong i = 1; i <= count; i++)
 			{
 				offset += 4;
-				String realmTitle = Utils.readNullTerminatedString(System.Text.Encoding.ASCII.GetString(dataBytes), ref offset);
-				String realmDescription = Utils.readNullTerminatedString(System.Text.Encoding.ASCII.GetString(dataBytes), ref offset);
+				String realmTitle = Utils.readNullTerminatedString(System.Text.Encoding.ASCII.GetString(data.ToArray()), ref offset);
+                String realmDescription = Utils.readNullTerminatedString(System.Text.Encoding.ASCII.GetString(data.ToArray()), ref offset);
 				if (ClientlessBot.debugging) 
                     Console.WriteLine("{0}: [BNCS] {1}. {2}, {3}",m_owner.Account,i, realmTitle,realmDescription);
 
@@ -257,9 +257,9 @@ namespace CSharpClient
 			}
         }
 
-        private void LoginResult(ulong type, ArrayList data, byte[] dataBytes)
+        private void LoginResult(ulong type, List<byte> data)
 		{
-            UInt32 result = BitConverter.ToUInt32(dataBytes, 4);
+            UInt32 result = BitConverter.ToUInt32(data.ToArray(), 4);
 			switch(result)
 			{
 				case 0x00:
@@ -293,12 +293,12 @@ namespace CSharpClient
                 return;
 		}
 
-        private void AccountLogin(ulong type, ArrayList data, byte[] dataBytes)
+        private void AccountLogin(ulong type, List<byte> data)
         {
 			if (ClientlessBot.debugging) 
                 Console.WriteLine("{0}: [BNCS] Logging into the account",m_owner.Account);
 			UInt32 client_token = (uint)System.Environment.TickCount;
-			ArrayList hash = Bsha1.DoubleHash(client_token, m_owner.ServerToken, m_owner.Password);
+			List<byte> hash = Bsha1.DoubleHash(client_token, m_owner.ServerToken, m_owner.Password);
 
             byte[] packet = BuildPacket((byte)0x3a, BitConverter.GetBytes(client_token), BitConverter.GetBytes(m_owner.ServerToken), hash, System.Text.Encoding.ASCII.GetBytes(m_owner.Account), zero);
 
@@ -318,51 +318,52 @@ namespace CSharpClient
             m_bncsStream.Write(packet, 0, packet.Length);
 		}
         
-        private void VoidRequest(ulong type, ArrayList data, byte[] dataBytes)
+        private void VoidRequest(ulong type, List<byte> data)
         {
             Console.WriteLine("{0}: [BNCS] Unknown Packet Received... Ignoring...", m_owner.Account);
         }
 
-        private void PingRequest(ulong type, ArrayList data,byte[] dataBytes)
+        private void PingRequest(ulong type, List<byte> data)
         {
             Console.Write("{0}: [BNCS] Replying to Ping request ........", m_owner.Account);
-            m_bncsStream.Write(dataBytes, 0, dataBytes.Length);
+            m_bncsStream.Write(data.ToArray(), 0, data.Count);
             Console.WriteLine("Done");
         }
 
-        private void AuthCheck(ulong type, ArrayList data, byte[] dataBytes)
+        private void AuthCheck(ulong type, List<byte> data)
         {
             if (ClientlessBot.debugging)
                 Console.WriteLine("{0}: [BNCS] Auth Check:", m_owner.Account);
-            ulong result = BitConverter.ToUInt32(dataBytes, 4);
-            String info = BitConverter.ToString(dataBytes, 8);
+            ulong result = BitConverter.ToUInt32(data.ToArray(), 4);
+            String info = BitConverter.ToString(data.ToArray(), 8);
 
             if (!handleAuthCheckResult(result, info))
                 return;
         }
 
-        private void AuthInfoRequest(ulong type, ArrayList data,byte[] dataBytes)
+        private void AuthInfoRequest(ulong type, List<byte> data)
         {
             if (ClientlessBot.debugging)
                 Console.WriteLine("{0}: [BNCS] Received Auth Info Packet", m_owner.Account);
 
-                m_owner.ServerToken = BitConverter.ToUInt32(dataBytes, 8);
-            ArrayList temp = data.GetRange(16, 8);
+            m_owner.ServerToken = BitConverter.ToUInt32(data.ToArray(), 8);
+            List<byte> temp = data.GetRange(16, 8);
             byte[] tbytes = new byte[temp.Count];
             temp.CopyTo(tbytes);
 
-            String mpq_file_time = System.Text.Encoding.UTF8.GetString(tbytes);
+            String mpq_file_time = System.Text.Encoding.ASCII.GetString(tbytes);
 
             int offset;
-            if (dataBytes[24] == 0x76)
+            if (data.ToArray()[24] == 0x76)
                 offset = 24;
             else
                 offset = 24;
-            Console.WriteLine((char)dataBytes[24]);
+            Console.WriteLine((char)data.ToArray()[24]);
 
-            String mpq_file_name = Utils.readNullTerminatedString(System.Text.Encoding.ASCII.GetString(dataBytes), ref offset);
+            String mpq_file_name = Utils.readNullTerminatedString(System.Text.Encoding.ASCII.GetString(data.ToArray()), ref offset);
             Console.WriteLine(mpq_file_name[0]);
-            String formula_string = Utils.readNullTerminatedString(System.Text.Encoding.UTF8.GetString(dataBytes), ref offset);
+            String formula_string = Utils.readNullTerminatedString(System.Text.Encoding.ASCII.GetString(data.ToArray()), ref offset);
+            Console.WriteLine(formula_string[0]);
 
             if (ClientlessBot.debugging)
             {
@@ -386,7 +387,7 @@ namespace CSharpClient
 
             uint client_token = (uint)System.Environment.TickCount;
 
-            ArrayList classic_hash = new ArrayList(), lod_hash = new ArrayList(), classic_public = new ArrayList(), lod_public = new ArrayList();
+            List<byte> classic_hash = new List<byte>(), lod_hash = new List<byte>(), classic_public = new List<byte>(), lod_public = new List<byte>();
 
 
             if (CdKey.GetD2KeyHash(m_owner.ClassicKey, ref  client_token, m_owner.ServerToken, ref classic_hash, ref classic_public))
@@ -454,8 +455,8 @@ namespace CSharpClient
             m_bncsStream.WriteByte(0x01);
             m_bncsStream.Write(AuthInfoPacket, 0, AuthInfoPacket.Length);
 
-            ArrayList bncsBuffer = new ArrayList();
-            ArrayList data = new ArrayList();
+            List<byte> bncsBuffer = new List<byte>();
+            List<byte> data = new List<byte>();
             while (true)
             {
 
@@ -463,8 +464,7 @@ namespace CSharpClient
                 {
                     break;
                 }
-                byte[] dataBytes = new byte[data.Count];
-                data.CopyTo(dataBytes);
+                
                 if (ClientlessBot.debugging)
                     Console.WriteLine("{0}: [BNCS] Received Packet From Server",  m_owner.Account);
 
@@ -479,10 +479,10 @@ namespace CSharpClient
                     Console.WriteLine("");
                 }
 
-                ulong type = dataBytes[1];
+                ulong type = data.ToArray()[1];
                 if (ClientlessBot.debugging)
                     Console.WriteLine("\tPacket Type: 0x{0:X}", type);
-                DispatchPacket(type)(type, data, dataBytes);
+                DispatchPacket(type)(type, data);
              }            
         }
 
@@ -542,7 +542,7 @@ namespace CSharpClient
             {
                 if (ClientlessBot.debugging)
                     Console.WriteLine("{0}: [BNCS] Requesting ini file time", m_owner.Account);
-                ArrayList args = new ArrayList(BitConverter.GetBytes(0x80000004));
+                List<byte> args = new List<byte>(BitConverter.GetBytes(0x80000004));
                 byte[] nulls = { 0x00, 0x00, 0x00, 0x00 };
                 args.AddRange(nulls);
                 args.AddRange(System.Text.Encoding.UTF8.GetBytes("bnserver-D2DV.ini"));
