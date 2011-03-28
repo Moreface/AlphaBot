@@ -123,6 +123,59 @@ namespace CSharpClient
             return bytes;
         }
 
+        public override void ThreadFunction()
+        {
+            m_owner.GameRequestId = 0x02;
+            m_owner.InGame = false;
+
+            Console.Write("{0}: [BNCS] Connecting to {1}:{2} .........", m_owner.Account, m_owner.BattleNetServer, s_bncsPort);
+            // Establish connection
+            m_socket.Connect(m_owner.BattleNetServer, s_bncsPort);
+            m_stream = m_socket.GetStream();
+            if (m_stream.CanWrite)
+            {
+                Console.WriteLine(" Connected");
+            }
+            else
+            {
+                Console.WriteLine(" Failed To connect");
+                return;
+            }
+
+            m_stream.WriteByte(0x01);
+            m_stream.Write(AuthInfoPacket, 0, AuthInfoPacket.Length);
+
+            List<byte> bncsBuffer = new List<byte>();
+            List<byte> data = new List<byte>();
+            while (true)
+            {
+
+                if (!GetPacket(ref bncsBuffer, ref data))
+                {
+                    break;
+                }
+
+                if (ClientlessBot.debugging)
+                    Console.WriteLine("{0}: [BNCS] Received Packet From Server", m_owner.Account);
+
+                if (ClientlessBot.debugging)
+                {
+                    Console.WriteLine("\tPacket Data: ");
+                    Console.Write("\t\t");
+                    for (int i = 0; i < data.Count; i++)
+                    {
+                        Console.Write("{0:X2} ", (byte)data[i]);
+                    }
+                    Console.WriteLine("");
+                }
+
+                byte type = data.ToArray()[1];
+                if (ClientlessBot.debugging)
+                    Console.WriteLine("\tPacket Type: 0x{0:X}", type);
+                DispatchPacket(type)(type, data);
+            }
+        }
+
         protected override PacketHandler DispatchPacket(byte type)
         {
             switch (type)
@@ -420,142 +473,66 @@ namespace CSharpClient
             m_stream.Write(packet, 0, packet.Length);
         }
 
-        public override void ThreadFunction()
-        {
-            m_owner.GameRequestId = 0x02;
-            m_owner.InGame = false;
-
-            Console.Write("{0}: [BNCS] Connecting to {1}:{2} .........",  m_owner.Account,  m_owner.BattleNetServer, s_bncsPort);
-            // Establish connection
-            m_socket.Connect(m_owner.BattleNetServer, s_bncsPort);
-            m_stream = m_socket.GetStream();
-            if (m_stream.CanWrite)
-            {
-                Console.WriteLine(" Connected");
-            }
-            else
-            {
-                Console.WriteLine(" Failed To connect");
-                return;
-            }
-
-            m_stream.WriteByte(0x01);
-            m_stream.Write(AuthInfoPacket, 0, AuthInfoPacket.Length);
-
-            List<byte> bncsBuffer = new List<byte>();
-            List<byte> data = new List<byte>();
-            while (true)
-            {
-
-                if (!GetPacket(ref bncsBuffer, ref data))
-                {
-                    break;
-                }
-                
-                if (ClientlessBot.debugging)
-                    Console.WriteLine("{0}: [BNCS] Received Packet From Server",  m_owner.Account);
-
-                if (ClientlessBot.debugging)
-                {
-                    Console.WriteLine("\tPacket Data: ");
-                    Console.Write("\t\t");
-                    for (int i = 0; i < data.Count; i++)
-                    {
-                        Console.Write("{0:X2} ", (byte)data[i]);
-                    }
-                    Console.WriteLine("");
-                }
-
-                byte type = data.ToArray()[1];
-                if (ClientlessBot.debugging)
-                    Console.WriteLine("\tPacket Type: 0x{0:X}", type);
-                DispatchPacket(type)(type, data);
-             }            
-        }
-
         protected bool handleAuthCheckResult(ulong result, string info)
         {
             switch (result)
             {
-                case 0x000:
-                    Console.WriteLine("{0}: [BNCS] Successfully logged on to Battle.net", m_owner.Account);
+                case 0x000: Console.WriteLine("{0}: [BNCS] Successfully logged on to Battle.net", m_owner.Account);
                     break;
-                case 0x100:
-                    Console.WriteLine("{0}: [BNCS] Outdated game version", m_owner.Account);
+                case 0x100: Console.WriteLine("{0}: [BNCS] Outdated game version", m_owner.Account);
                     break;
-                case 0x101:
-                    Console.WriteLine("{0}: [BNCS] Invalid version", m_owner.Account);
+                case 0x101: Console.WriteLine("{0}: [BNCS] Invalid version", m_owner.Account);
                     break;
-                case 0x102:
-                    Console.WriteLine("{0}: [BNCS] Game version must be downgraded to {1}", m_owner.Account, info);
+                case 0x102: Console.WriteLine("{0}: [BNCS] Game version must be downgraded to {1}", m_owner.Account, info);
                     break;
-
-                case 0x200:
-                    Console.WriteLine("{0}: [BNCS] Invalid CD key", m_owner.Account);
+                case 0x200: Console.WriteLine("{0}: [BNCS] Invalid CD key", m_owner.Account);
                     m_owner.Status = ClientlessBot.ClientStatus.STATUS_INVALID_CD_KEY;
                     break;
-                case 0x210:
-                    Console.WriteLine("{0}: [BNCS] Invalid Expansion CD key", m_owner.Account);
+                case 0x210: Console.WriteLine("{0}: [BNCS] Invalid Expansion CD key", m_owner.Account);
                     m_owner.Status = ClientlessBot.ClientStatus.STATUS_INVALID_EXP_CD_KEY;
                     break;
-
-                case 0x201:
-                    Console.WriteLine("{0}: [BNCS] CD key is being used by {1}", m_owner.Account, info);
+                case 0x201: Console.WriteLine("{0}: [BNCS] CD key is being used by {1}", m_owner.Account, info);
                     m_owner.Status = ClientlessBot.ClientStatus.STATUS_KEY_IN_USE;
                     break;
-                case 0x211:
-                    Console.WriteLine("{0}: [BNCS] Expansion CD key is being used by {1}", m_owner.Account, info);
+                case 0x211: Console.WriteLine("{0}: [BNCS] Expansion CD key is being used by {1}", m_owner.Account, info);
                     m_owner.Status = ClientlessBot.ClientStatus.STATUS_EXP_KEY_IN_USE;
                     break;
-
-                case 0x202:
-                    Console.WriteLine("{0}: [BNCS] This CD key has been banned", m_owner.Account, info);
+                case 0x202: Console.WriteLine("{0}: [BNCS] This CD key has been banned", m_owner.Account, info);
                     m_owner.Status = ClientlessBot.ClientStatus.STATUS_BANNED_CD_KEY;
                     break;
-                case 0x212:
-                    Console.WriteLine("{0}: [BNCS] This Expansion CD key has been banned", m_owner.Account);
+                case 0x212: Console.WriteLine("{0}: [BNCS] This Expansion CD key has been banned", m_owner.Account);
                     m_owner.Status = ClientlessBot.ClientStatus.STATUS_BANNED_EXP_CD_KEY;
                     break;
-
-                case 0x203:
-                    Console.WriteLine("{0}: [BNCS] This CD key is meant to be used with another product", m_owner.Account);
+                case 0x203: Console.WriteLine("{0}: [BNCS] This CD key is meant to be used with another product", m_owner.Account);
                     break;
-
-                default:
-                    Console.WriteLine("{0}: [BNCS] Failed to log on to Battle.net ({1})", m_owner.Account, result);
+                default: Console.WriteLine("{0}: [BNCS] Failed to log on to Battle.net ({1})", m_owner.Account, result);
                     break;
             }
             if (result == 0)
             {
                 if (ClientlessBot.debugging)
                     Console.WriteLine("{0}: [BNCS] Requesting ini file time", m_owner.Account);
-                List<byte> args = new List<byte>(BitConverter.GetBytes(0x80000004));
-                byte[] nulls = { 0x00, 0x00, 0x00, 0x00 };
-                args.AddRange(nulls);
-                args.AddRange(System.Text.Encoding.UTF8.GetBytes("bnserver-D2DV.ini"));
-                args.Add((byte)0x00);
-               byte[] packet = BuildPacket((byte)0x33, args);
 
-               if (ClientlessBot.debugging)
-               {
-                   Console.WriteLine("\tWriting to Stream: ");
-                   for (int i = 0; i < packet.Length; i++)
-                   {
-                       if (i % 8 == 0 && i != 0)
-                           Console.Write(" ");
-                       if (i % 16 == 0 && i != 0)
-                           Console.WriteLine("");
-                       Console.Write("{0:X2} ", packet[i]);
-                   }
-                   Console.WriteLine("");
-               }
+                byte[] packet = BuildPacket((byte)0x33, BitConverter.GetBytes(0x80000004), nulls, System.Text.Encoding.UTF8.GetBytes("bnserver-D2DV.ini"), zero);
+
+                if (ClientlessBot.debugging)
+                {
+                    Console.WriteLine("\tWriting to Stream: ");
+                    for (int i = 0; i < packet.Length; i++)
+                    {
+                        if (i % 8 == 0 && i != 0)
+                            Console.Write(" ");
+                        if (i % 16 == 0 && i != 0)
+                            Console.WriteLine("");
+                        Console.Write("{0:X2} ", packet[i]);
+                    }
+                    Console.WriteLine("");
+                }
                 m_stream.Write(packet, 0, packet.Length);
 
                 return true;
             }
-
             return false;
-
         }
     }
 }
