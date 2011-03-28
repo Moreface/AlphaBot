@@ -8,23 +8,23 @@ namespace CSharpClient
 {
     class AdvancedCheckRevision
     {
-        private delegate uint Operator(uint var1, uint var2);
-        private static Dictionary<char, Operator> Operations = new Dictionary<char, Operator>() {
+        protected delegate uint Operator(uint var1, uint var2);
+        protected static Dictionary<char, Operator> Operations = new Dictionary<char, Operator>() {
          {'+', Add}, {'-', Subtract}, {'*', Multiply}, {'/', Divide}, {'|', Or}, {'&', And}, {'^', Xor}
       };
 
-        private static Dictionary<int, OpCode> Ldargs = new Dictionary<int, OpCode>() {
+        protected static Dictionary<int, OpCode> Ldargs = new Dictionary<int, OpCode>() {
          {0, OpCodes.Ldarg_0}, {1, OpCodes.Ldarg_1}, {2, OpCodes.Ldarg_2}, {3, OpCodes.Ldarg_3}
       };
 
-        private static Dictionary<char, OpCode> Operators = new Dictionary<char, OpCode>() {
+        protected static Dictionary<char, OpCode> Operators = new Dictionary<char, OpCode>() {
          {'+', OpCodes.Add}, {'-', OpCodes.Sub}, {'*', OpCodes.Mul}, {'/', OpCodes.Div},
          {'|', OpCodes.Or},  {'&', OpCodes.And}, {'^', OpCodes.Xor}
       };
 
-        private delegate void FileHasher(ref uint a, ref uint b, ref uint c, ref uint s, byte[] f);
+        protected delegate void FileHasher(ref uint a, ref uint b, ref uint c, ref uint s, byte[] f);
 
-        private static uint[] hashes = new uint[] { 0xE7F4CB62, 0xF6A14FFC, 0xAA5504AF, 0x871FCDC2, 0x11BF6A18, 0xC57292E6, 0x7927D27E, 0x2FEC8733 };
+        protected static uint[] hashes = new uint[] { 0xE7F4CB62, 0xF6A14FFC, 0xAA5504AF, 0x871FCDC2, 0x11BF6A18, 0xC57292E6, 0x7927D27E, 0x2FEC8733 };
 
         public static uint FastComputeHash(string formula, string mpqFile, FileStream gameExe, FileStream bnclientDll, FileStream d2clientDll)
         {
@@ -46,7 +46,7 @@ namespace CSharpClient
             return values[2];
         }
 
-        private static FileHasher BuildFileHasher(IEnumerable<FormulaOp> ops)
+        protected static FileHasher BuildFileHasher(IEnumerable<FormulaOp> ops)
         {
             Type uint_t = typeof(uint).MakeByRefType();
             DynamicMethod method = new DynamicMethod("HashFile", typeof(void),
@@ -138,7 +138,7 @@ namespace CSharpClient
             return values[2];
         }
 
-        private static IEnumerable<FormulaOp> BuildFormula(string formula, ref uint[] values)
+        protected static IEnumerable<FormulaOp> BuildFormula(string formula, ref uint[] values)
         {
             List<FormulaOp> ops = new List<FormulaOp>();
             string[] tokens = formula.Split(' ');
@@ -160,14 +160,14 @@ namespace CSharpClient
             }
             return ops;
         }
-        private static int WhichVariable(char param)
+        protected static int WhichVariable(char param)
         {
             int res = (param) - 'A';
             if (res > 2) res = 3;
             return res;
         }
 
-        private static void ComputeFileHash(IEnumerable<FormulaOp> formula, byte[] file, ref uint[] values)
+        protected static void ComputeFileHash(IEnumerable<FormulaOp> formula, byte[] file, ref uint[] values)
         {
             int len = file.Length;
             for (int i = 0; i < len; i += 4)
@@ -178,20 +178,20 @@ namespace CSharpClient
             }
         }
 
-        private static uint Add(uint var1, uint var2) { return var1 + var2; }
-        private static uint Subtract(uint var1, uint var2) { return var1 - var2; }
-        private static uint Multiply(uint var1, uint var2) { return var1 * var2; }
-        private static uint Divide(uint var1, uint var2) { return var1 / var2; }
-        private static uint Or(uint var1, uint var2) { return var1 | var2; }
-        private static uint Xor(uint var1, uint var2) { return var1 ^ var2; }
-        private static uint And(uint var1, uint var2) { return var1 & var2; }
+        protected static uint Add(uint var1, uint var2) { return var1 + var2; }
+        protected static uint Subtract(uint var1, uint var2) { return var1 - var2; }
+        protected static uint Multiply(uint var1, uint var2) { return var1 * var2; }
+        protected static uint Divide(uint var1, uint var2) { return var1 / var2; }
+        protected static uint Or(uint var1, uint var2) { return var1 | var2; }
+        protected static uint Xor(uint var1, uint var2) { return var1 ^ var2; }
+        protected static uint And(uint var1, uint var2) { return var1 & var2; }
 
-        private class FormulaOp
+        protected class FormulaOp
         {
-            public int Variable1 { get; private set; }
-            public int Variable2 { get; private set; }
-            public int Result { get; private set; }
-            public char Operation { get; private set; }
+            public int Variable1 { get; protected set; }
+            public int Variable2 { get; protected set; }
+            public int Result { get; protected set; }
+            public char Operation { get; protected set; }
             public FormulaOp(char op, int result, int variable1, int variable2)
             {
                 Result = result; Variable1 = variable1; Variable2 = variable2; Operation = op;

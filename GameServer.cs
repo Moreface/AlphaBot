@@ -10,8 +10,8 @@ namespace CSharpClient
     class GameServer
     {
         static byte[] zero = { 0x00 };
-        private static Int32 s_gsPort = 4000;
-        private ClientlessBot m_owner;
+        protected static Int32 s_gsPort = 4000;
+        protected ClientlessBot m_owner;
 
         TcpClient m_gsSocket;
         NetworkStream m_gsStream;
@@ -21,7 +21,7 @@ namespace CSharpClient
             m_gsStream.Write(packet, 0, packet.Length);
         }
 
-        private byte[] BuildPacket(byte command, params IEnumerable<byte>[] args)
+        protected byte[] BuildPacket(byte command, params IEnumerable<byte>[] args)
         {
             List<byte> packet = new List<byte>();
 

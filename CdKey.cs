@@ -60,7 +60,7 @@ namespace CSharpClient
 		    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
 	    };
 
-        private static char ConvertToHexDigit(ulong byt)
+        protected static char ConvertToHexDigit(ulong byt)
         {
             byt &= 0xF;
             if (byt < 10)
@@ -69,7 +69,7 @@ namespace CSharpClient
                 return (char)(byt + 0x37);
         }
 
-        private static ulong ConvertFromHexDigit(char input)
+        protected static ulong ConvertFromHexDigit(char input)
         {
             if (input >= '0' && input <= '9')
                 return (ulong)(input - 0x30);

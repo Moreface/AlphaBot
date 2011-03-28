@@ -24,7 +24,7 @@ namespace CSharpClient
 {
     class Bsha1
     {
-        private static void setBufferByte(uint[] buffer, int offset, byte val)
+        protected static void setBufferByte(uint[] buffer, int offset, byte val)
         {
             int index = offset / 4;
             int position = offset % 4;
@@ -33,7 +33,7 @@ namespace CSharpClient
             buffer[index] |= (uint)val << bit_offset;
         }
 
-        private static byte getBufferByte(uint[] buffer, int offset)
+        protected static byte getBufferByte(uint[] buffer, int offset)
         {
             int index = offset / 4;
             int position = offset % 4;
@@ -41,7 +41,7 @@ namespace CSharpClient
             return (byte)((buffer[index] >> bit_offset) & 0xff);
         }
 
-        private static void CalculateHash(ref uint[] buffer)
+        protected static void CalculateHash(ref uint[] buffer)
         {
 	        uint[] hash_buffer = new uint[80];
 	        uint hash, a, b, c, d, e, hash_buffer_offset;

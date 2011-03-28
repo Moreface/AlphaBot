@@ -68,7 +68,7 @@ namespace CSharpClient
             return left ^ right;
         }
 
-        private static bool GetVariableIndex(char input,ref uint offset)
+        protected static bool GetVariableIndex(char input,ref uint offset)
         {
             if (input >= 'A' && input <= 'C')
             {
@@ -78,7 +78,7 @@ namespace CSharpClient
             return false;
         }
 
-        private static bool RetrieveMpqIndex(String mpq,ref uint offset)
+        protected static bool RetrieveMpqIndex(String mpq,ref uint offset)
         {
             if (mpq.Length != 14)
                 return false;

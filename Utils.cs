@@ -25,7 +25,7 @@ namespace CSharpClient
 {
     class Utils
     {
-        private static ulong readNumber(ref String input, int offset, uint size)
+        protected static ulong readNumber(ref String input, int offset, uint size)
         {
             ulong output = 0;
             for (int i = 0; i < size; i++, offset++)

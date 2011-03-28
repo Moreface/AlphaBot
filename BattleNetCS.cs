@@ -24,16 +24,9 @@ using System.Net;
 
 namespace CSharpClient
 {
-    class BattleNetCS
+    class BattleNetCS : GenericServerConnection
     {
         static int s_bncsPort = 6112;
-
-        static byte[] nulls = { 0x00, 0x00, 0x00, 0x00 };
-        static byte[] ten = { 0x10, 0x00, 0x00, 0x00 };
-        static byte[] six = { 0x06, 0x00, 0x00, 0x00 };
-        static byte[] zero = { 0x00 };
-
-        String platform = "68XI", classic_id = "VD2D", lod_id = "PX2D";
 
         static byte[] AuthInfoPacket =
 	    {
@@ -47,24 +40,18 @@ namespace CSharpClient
 		    0x73, 0x00
 	    };
 
-        public TcpClient m_bncsSocket;
-        public NetworkStream m_bncsStream;
-
-        ClientlessBot m_owner;
-
-        public BattleNetCS(ClientlessBot cb)
+        public BattleNetCS(ClientlessBot cb) : base(cb)
         {
-            m_owner = cb;
-            m_bncsSocket = new TcpClient();
+            
         }
 
-        private bool getBncsPacket(ref NetworkStream bncsStream, ref List<byte> bncsBuffer, ref List<byte> data)
+        protected override bool GetPacket(ref List<byte> bncsBuffer, ref List<byte> data)
         {
             while (bncsBuffer.Count < 4)
             {
                 try
                 {
-                    byte temp = (byte)bncsStream.ReadByte();
+                    byte temp = (byte)m_stream.ReadByte();
                     bncsBuffer.Add(temp);
                     if (ClientlessBot.debugging)
                     {
@@ -74,7 +61,7 @@ namespace CSharpClient
                 catch
                 {
                     Console.WriteLine("\n{0}: [BNCS] Disconnected From BNCS", m_owner.Account);
-                    m_bncsSocket.Close();
+                    m_socket.Close();
                     return false;
                 }
             }
@@ -89,7 +76,7 @@ namespace CSharpClient
             {
                 try
                 {
-                    byte temp = (byte)bncsStream.ReadByte();
+                    byte temp = (byte)m_stream.ReadByte();
                     bncsBuffer.Add(temp);
                     if (ClientlessBot.debugging)
                     {
@@ -99,7 +86,7 @@ namespace CSharpClient
                 catch
                 {
                     Console.WriteLine("\n{0}: [BNCS] Disconnected From BNCS", m_owner.Account);
-                    m_bncsSocket.Close();
+                    m_socket.Close();
                     return false;
                 }
             }
@@ -110,12 +97,12 @@ namespace CSharpClient
             return true;
         }
 
-        public void Write(byte[] packet)
+        public override void Write(byte[] packet)
         {
-            m_bncsStream.Write(packet, 0, packet.Length);
+            m_stream.Write(packet, 0, packet.Length);
         }
 
-        public byte[] BuildPacket(byte command, params IEnumerable<byte>[] args)
+        public override byte[] BuildPacket(byte command, params IEnumerable<byte>[] args)
         {
             List<byte> packet = new List<byte>();
             packet.Add((byte)0xFF);
@@ -136,9 +123,7 @@ namespace CSharpClient
             return bytes;
         }
 
-        private delegate void PacketHandler(ulong type, List<byte> data);
-
-        private PacketHandler DispatchPacket(ulong type)
+        protected override PacketHandler DispatchPacket(byte type)
         {
             switch (type)
             {
@@ -157,21 +142,21 @@ namespace CSharpClient
             }
         }
 
-        private void HandleAdvertising(ulong type, List<byte> data)
+        protected void HandleAdvertising(byte type, List<byte> data)
         {
             UInt32 ad_id = BitConverter.ToUInt32(data.ToArray(), 4);
             if (ClientlessBot.debugging) Console.WriteLine("{0}: [BNCS] Received advertising data, sending back display confirmation", m_owner.Account);
             byte[] packet = BuildPacket((byte)0x21, System.Text.Encoding.ASCII.GetBytes(platform), System.Text.Encoding.ASCII.GetBytes(lod_id), BitConverter.GetBytes(ad_id), zero, zero);
-            m_bncsStream.Write(packet, 0, packet.Length);
+            m_stream.Write(packet, 0, packet.Length);
         }
 
-        private void EnterChat(ulong type, List<byte> data)
+        protected void EnterChat(byte type, List<byte> data)
         {
             Console.WriteLine("{0}: [BNCS] Entered the chat.", m_owner.Account);
             byte[] packeta = {0xFF, 0x46, 0x04, 0x00 };
-            m_bncsStream.Write(packeta, 0, packeta.Length);
+            m_stream.Write(packeta, 0, packeta.Length);
             byte[] packetb = BuildPacket((byte)0x15, System.Text.Encoding.ASCII.GetBytes(platform), System.Text.Encoding.ASCII.GetBytes(lod_id), BitConverter.GetBytes((uint)System.Environment.TickCount));
-            m_bncsStream.Write(packetb,0,packetb.Length);
+            m_stream.Write(packetb,0,packetb.Length);
 
             m_owner.StartGameCreationThread();
         }
@@ -181,7 +166,7 @@ namespace CSharpClient
             return (UInt16)((value & 0xFFU) << 8 | (value & 0xFF00U) >> 8);
         }
 
-        private void StartMcp(ulong type, List<byte> data)
+        protected void StartMcp(byte type, List<byte> data)
         {
             if (data.Count<= 12)
             {
@@ -202,7 +187,7 @@ namespace CSharpClient
             m_owner.StartMcpThread();
         }
 
-        private void RealmList(ulong type, List<byte> data)
+        protected void RealmList(byte type, List<byte> data)
         {
             UInt32 count = BitConverter.ToUInt32(data.ToArray(), 8);
 			Int32 offset = 12;
@@ -253,11 +238,11 @@ namespace CSharpClient
                     }
                     Console.WriteLine("");
                 }
-				m_bncsStream.Write(packet,0,packet.Length);
+				m_stream.Write(packet,0,packet.Length);
 			}
         }
 
-        private void LoginResult(ulong type, List<byte> data)
+        protected void LoginResult(byte type, List<byte> data)
 		{
             UInt32 result = BitConverter.ToUInt32(data.ToArray(), 4);
 			switch(result)
@@ -287,13 +272,13 @@ namespace CSharpClient
                 if (ClientlessBot.debugging)
                     Console.WriteLine("{0}: [BNCS] Requesting Realm List", m_owner.Account);
                 byte[] packet = { 0xFF, 0x40, 0x04, 0x00 };
-                m_bncsStream.Write(packet, 0, 4);
+                m_stream.Write(packet, 0, 4);
             }
             else
                 return;
 		}
 
-        private void AccountLogin(ulong type, List<byte> data)
+        protected void AccountLogin(byte type, List<byte> data)
         {
 			if (ClientlessBot.debugging) 
                 Console.WriteLine("{0}: [BNCS] Logging into the account",m_owner.Account);
@@ -315,22 +300,22 @@ namespace CSharpClient
                 }
                 Console.WriteLine("");
             }
-            m_bncsStream.Write(packet, 0, packet.Length);
+            m_stream.Write(packet, 0, packet.Length);
 		}
-        
-        private void VoidRequest(ulong type, List<byte> data)
+
+        protected void VoidRequest(byte type, List<byte> data)
         {
             Console.WriteLine("{0}: [BNCS] Unknown Packet Received... Ignoring...", m_owner.Account);
         }
 
-        private void PingRequest(ulong type, List<byte> data)
+        protected void PingRequest(byte type, List<byte> data)
         {
             Console.Write("{0}: [BNCS] Replying to Ping request ........", m_owner.Account);
-            m_bncsStream.Write(data.ToArray(), 0, data.Count);
+            m_stream.Write(data.ToArray(), 0, data.Count);
             Console.WriteLine("Done");
         }
 
-        private void AuthCheck(ulong type, List<byte> data)
+        protected void AuthCheck(byte type, List<byte> data)
         {
             if (ClientlessBot.debugging)
                 Console.WriteLine("{0}: [BNCS] Auth Check:", m_owner.Account);
@@ -341,7 +326,7 @@ namespace CSharpClient
                 return;
         }
 
-        private void AuthInfoRequest(ulong type, List<byte> data)
+        protected void AuthInfoRequest(byte type, List<byte> data)
         {
             if (ClientlessBot.debugging)
                 Console.WriteLine("{0}: [BNCS] Received Auth Info Packet", m_owner.Account);
@@ -430,19 +415,19 @@ namespace CSharpClient
                 }
                 Console.WriteLine("");
             }
-            m_bncsStream.Write(packet, 0, packet.Length);
+            m_stream.Write(packet, 0, packet.Length);
         }
 
-        public void BncsThreadFunction()
+        public void ThreadFunction()
         {
             m_owner.GameRequestId = 0x02;
             m_owner.InGame = false;
 
             Console.Write("{0}: [BNCS] Connecting to {1}:{2} .........",  m_owner.Account,  m_owner.BattleNetServer, s_bncsPort);
             // Establish connection
-            m_bncsSocket.Connect(m_owner.BattleNetServer, s_bncsPort);
-            m_bncsStream = m_bncsSocket.GetStream();
-            if (m_bncsStream.CanWrite)
+            m_socket.Connect(m_owner.BattleNetServer, s_bncsPort);
+            m_stream = m_socket.GetStream();
+            if (m_stream.CanWrite)
             {
                 Console.WriteLine(" Connected");
             }
@@ -452,15 +437,15 @@ namespace CSharpClient
                 return;
             }
 
-            m_bncsStream.WriteByte(0x01);
-            m_bncsStream.Write(AuthInfoPacket, 0, AuthInfoPacket.Length);
+            m_stream.WriteByte(0x01);
+            m_stream.Write(AuthInfoPacket, 0, AuthInfoPacket.Length);
 
             List<byte> bncsBuffer = new List<byte>();
             List<byte> data = new List<byte>();
             while (true)
             {
 
-                if (!getBncsPacket(ref m_bncsStream, ref bncsBuffer, ref data))
+                if (!GetPacket(ref bncsBuffer, ref data))
                 {
                     break;
                 }
@@ -479,14 +464,14 @@ namespace CSharpClient
                     Console.WriteLine("");
                 }
 
-                ulong type = data.ToArray()[1];
+                byte type = data.ToArray()[1];
                 if (ClientlessBot.debugging)
                     Console.WriteLine("\tPacket Type: 0x{0:X}", type);
                 DispatchPacket(type)(type, data);
              }            
         }
 
-        private bool handleAuthCheckResult(ulong result, string info)
+        protected bool handleAuthCheckResult(ulong result, string info)
         {
             switch (result)
             {
@@ -562,7 +547,7 @@ namespace CSharpClient
                    }
                    Console.WriteLine("");
                }
-                m_bncsStream.Write(packet, 0, packet.Length);
+                m_stream.Write(packet, 0, packet.Length);
 
                 return true;
             }

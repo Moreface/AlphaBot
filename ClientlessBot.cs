@@ -56,53 +56,53 @@ namespace CSharpClient
         };
 
 
-        private String m_gameName;
+        protected String m_gameName;
         public String GameName
         {
             get { return m_gameName; }
             set { m_gameName = value; }
         }
-        private String m_gamePassword;
+        protected String m_gamePassword;
         public String GamePassword
         {
             get { return m_gamePassword; }
             set { m_gamePassword = value; }
         }
-        private IPAddress m_gsIp;
+        protected IPAddress m_gsIp;
         public IPAddress GsIp
         {
             get { return m_gsIp; }
             set { m_gsIp = value; }
         }
 
-        private List<byte> m_gsHash;
+        protected List<byte> m_gsHash;
         public List<byte> GsHash
         {
             get { return m_gsHash; }
             set { m_gsHash = value; }
         }
 
-        private List<byte> m_gsToken;
+        protected List<byte> m_gsToken;
         public List<byte> GsToken
         {
             get { return m_gsToken; }
             set { m_gsToken = value; }
         }
 
-        private UInt16 m_mcpPort;
+        protected UInt16 m_mcpPort;
         public UInt16 McpPort
         {
             get { return m_mcpPort; }
             set { m_mcpPort = value; }
         }
-        private IPAddress m_mcpIp;
+        protected IPAddress m_mcpIp;
         public IPAddress McpIp
         {
             get { return m_mcpIp; }
             set { m_mcpIp= value; }
         }
 
-        private List<byte> m_mcpData;
+        protected List<byte> m_mcpData;
         public List<byte> McpData
         {
             get { return m_mcpData; }
@@ -110,21 +110,21 @@ namespace CSharpClient
         }
 
 
-        private Boolean m_loggedin;
+        protected Boolean m_loggedin;
         public Boolean LoggedIn
         {
             get { return m_loggedin; }
             set { m_loggedin = value; }
         }
         // Game difficulty
-        private GameDifficulty m_difficulty;
+        protected GameDifficulty m_difficulty;
         public GameDifficulty Difficulty
         {
             get { return m_difficulty; }
             set { m_difficulty = value; }
         }
         // Account Name, Password, and Character Name
-        private String m_account, m_password, m_character;
+        protected String m_account, m_password, m_character;
         public String Account
         {
             get { return m_account; }
@@ -142,7 +142,7 @@ namespace CSharpClient
         }
 
         // CD-Key Values
-        private String m_classicKey, m_expansionKey;
+        protected String m_classicKey, m_expansionKey;
         public String ClassicKey
         {
             get { return m_classicKey; }
@@ -155,11 +155,11 @@ namespace CSharpClient
         }
 
         // Bosses to kill
-        private Boolean m_pindle, m_eldritch, m_shenk;
+        protected Boolean m_pindle, m_eldritch, m_shenk;
         // Chicken and Potion Values
-        private UInt32 m_chickenLife, m_potLife;
+        protected UInt32 m_chickenLife, m_potLife;
         // Server information
-        private String m_battleNetServer, m_realm;
+        protected String m_battleNetServer, m_realm;
         public String BattleNetServer
         {
             get { return m_battleNetServer; }
@@ -171,33 +171,33 @@ namespace CSharpClient
             set { m_realm = value; }
         }
 
-        private String m_gameExeInformation;
+        protected String m_gameExeInformation;
         public String GameExeInformation
         {
             get { return m_gameExeInformation; }
             set { m_gameExeInformation = value; }
         }
-        private String m_keyOwner;
+        protected String m_keyOwner;
         public String KeyOwner
         {
             get { return m_keyOwner; }
             set { m_keyOwner = value; }
         }
 
-        private String m_binaryDirectory;
+        protected String m_binaryDirectory;
         public String BinaryDirectory
         {
             get { return m_binaryDirectory; }
             set { m_binaryDirectory = value; }
         }
-        private ClientStatus m_status;
+        protected ClientStatus m_status;
         public ClientStatus Status
         {
             get { return m_status; }
             set { m_status = value; }
         }
 
-        private UInt32 m_serverToken;
+        protected UInt32 m_serverToken;
         public UInt32 ServerToken
         {
             get { return m_serverToken; }
@@ -220,26 +220,26 @@ namespace CSharpClient
         public BattleNetCS m_bncs;
         public RealmServer m_mcp;
         public GameServer m_gs;
-        private Thread m_bncsThread;
-        private Thread m_mcpThread;
-        private Thread m_gameCreationThread;
-        private Thread m_gsThread;
+        protected Thread m_bncsThread;
+        protected Thread m_mcpThread;
+        protected Thread m_gameCreationThread;
+        protected Thread m_gsThread;
 
-        private Boolean m_firstGame;
+        protected Boolean m_firstGame;
         public Boolean FirstGame
         {
             get { return m_firstGame; }
             set { m_firstGame = value; }
         }
 
-        private Boolean m_failedGame;
+        protected Boolean m_failedGame;
         public Boolean FailedGame
         {
             get { return m_failedGame; }
             set { m_failedGame = value; }
         }
 
-        private Boolean m_connectedToGs;
+        protected Boolean m_connectedToGs;
         public Boolean ConnectedToGs
         {
             get { return m_connectedToGs; }
@@ -249,12 +249,11 @@ namespace CSharpClient
         ClientlessBot()
         {
 
-
             m_bncs = new BattleNetCS(this);
             m_mcp = new RealmServer(this);
             m_gs = new GameServer(this);
-            m_bncsThread = new Thread(m_bncs.BncsThreadFunction);
-            m_mcpThread = new Thread(m_mcp.McpThreadFunction);
+            m_bncsThread = new Thread(m_bncs.ThreadFunction);
+            m_mcpThread = new Thread(m_mcp.ThreadFunction);
             m_gameCreationThread = new Thread(m_mcp.CreateGameThreadFunction);
             m_gsThread = new Thread(m_gs.GameServerThreadFunction);
             m_bncsThread.Start();
@@ -272,7 +271,7 @@ namespace CSharpClient
         public void StartGameCreationThread()
         {
             Console.WriteLine("{0}: [BOT]  Game creation thread started.", m_account);
-            m_bncs.m_bncsSocket.Close();
+            m_bncs.m_socket.Close();
             m_gameCreationThread.Start();
         }
 
