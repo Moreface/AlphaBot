@@ -340,19 +340,8 @@ namespace CSharpClient
 
             byte[] packet = BuildPacket((byte)0x3a, BitConverter.GetBytes(client_token), BitConverter.GetBytes(m_owner.ServerToken), hash, System.Text.Encoding.ASCII.GetBytes(m_owner.Account), zero);
 
-            if (ClientlessBot.debugging)
-            {
-                Console.WriteLine("\tWriting to Stream: ");
-                for (int i = 0; i < packet.Length; i++)
-                {
-                    if (i % 8 == 0 && i != 0)
-                        Console.Write(" ");
-                    if (i % 16 == 0 && i != 0)
-                        Console.WriteLine("");
-                    Console.Write("{0:X2} ", packet[i]);
-                }
-                Console.WriteLine("");
-            }
+            PrintPacket(packet);
+
             m_stream.Write(packet, 0, packet.Length);
 		}
 
@@ -457,19 +446,8 @@ namespace CSharpClient
                             BitConverter.GetBytes(0x00000002), nulls, ten, six, classic_public, nulls, classic_hash, ten, BitConverter.GetBytes((UInt32)10),
                             lod_public, nulls, lod_hash, System.Text.Encoding.UTF8.GetBytes(m_owner.GameExeInformation), zero, System.Text.Encoding.ASCII.GetBytes(m_owner.KeyOwner),zero);
 
-            if (ClientlessBot.debugging)
-            {
-                Console.WriteLine("\tWriting to Stream: ");
-                for (int i = 0; i < packet.Length; i++)
-                {
-                    if (i % 8 == 0 && i != 0)
-                        Console.Write(" ");
-                    if (i % 16 == 0 && i != 0)
-                        Console.WriteLine("");
-                    Console.Write("{0:X2} ", packet[i]);
-                }
-                Console.WriteLine("");
-            }
+            PrintPacket(packet);
+
             m_stream.Write(packet, 0, packet.Length);
         }
 
@@ -515,19 +493,8 @@ namespace CSharpClient
 
                 byte[] packet = BuildPacket((byte)0x33, BitConverter.GetBytes(0x80000004), nulls, System.Text.Encoding.UTF8.GetBytes("bnserver-D2DV.ini"), zero);
 
-                if (ClientlessBot.debugging)
-                {
-                    Console.WriteLine("\tWriting to Stream: ");
-                    for (int i = 0; i < packet.Length; i++)
-                    {
-                        if (i % 8 == 0 && i != 0)
-                            Console.Write(" ");
-                        if (i % 16 == 0 && i != 0)
-                            Console.WriteLine("");
-                        Console.Write("{0:X2} ", packet[i]);
-                    }
-                    Console.WriteLine("");
-                }
+                PrintPacket(packet);
+
                 m_stream.Write(packet, 0, packet.Length);
 
                 return true;

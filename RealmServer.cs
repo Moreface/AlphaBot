@@ -423,19 +423,7 @@ namespace CSharpClient
             m_stream.WriteByte(0x01);
             byte[] packet = BuildPacket((byte)0x01, m_owner.McpData);
 
-            if (ClientlessBot.debugging)
-            {
-                Console.WriteLine("\tWriting to Stream: ");
-                for (int i = 0; i < packet.Length; i++)
-                {
-                    if (i % 8 == 0 && i != 0)
-                        Console.Write(" ");
-                    if (i % 16 == 0 && i != 0)
-                        Console.WriteLine("");
-                    Console.Write("{0:X2} ", packet[i]);
-                }
-                Console.WriteLine("");
-            }
+            PrintPacket(packet);
 
             m_stream.Write(packet, 0, packet.Length);
 

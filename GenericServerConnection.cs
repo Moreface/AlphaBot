@@ -22,6 +22,22 @@ namespace CSharpClient
             m_stream.Write(packet, 0, packet.Length);
         }
 
+        public virtual void PrintPacket(byte[] packet)
+        {
+            if (ClientlessBot.debugging)
+            {
+                Console.WriteLine("\tWriting to Stream: ");
+                for (int i = 0; i < packet.Length; i++)
+                {
+                    if (i % 8 == 0 && i != 0)
+                        Console.Write(" ");
+                    if (i % 16 == 0 && i != 0)
+                        Console.WriteLine("");
+                    Console.Write("{0:X2} ", packet[i]);
+                }
+                Console.WriteLine("");
+            }
+        }
         public GenericServerConnection(ClientlessBot cb)
         {
             m_owner = cb;
@@ -32,14 +48,18 @@ namespace CSharpClient
         {
             return false;
         }
+
         public virtual void ThreadFunction()
         {
         }
+
         protected delegate void PacketHandler(byte type, List<byte> data);
+
         public virtual byte[] BuildPacket(byte command, params IEnumerable<byte>[] args)
         {
             return null;
         }
+
         protected virtual PacketHandler DispatchPacket(byte type)
         {
             return null;
