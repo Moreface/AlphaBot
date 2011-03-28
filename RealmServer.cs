@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*  Copyright (c) 2010 Daniel Kuwahara
+ *    This file is part of AlphaBot.
+
+    AlphaBot is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    AlphaBot is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -148,7 +164,7 @@ namespace CSharpClient
 					break;
 
 				case 0x20:
-					Console.WriteLine("{0}: [MCP] Game server down (it is probable that you tried to create a nightmare/hell game with a character who doesn't have access to that difficulty yet, or gamename/password were invalid)", m_owner.Account);
+					Console.WriteLine("{0}: [MCP] Game server down (it is probably that you tried to create a nightmare/hell game with a character who doesn't have access to that difficulty yet, or gamename/password were invalid)", m_owner.Account);
 					break;
 
 				case 0x6e:
