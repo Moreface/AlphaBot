@@ -7,21 +7,11 @@ using System.Collections;
 
 namespace CSharpClient
 {
-    class GameServer
+    class GameServer : GenericServerConnection
     {
-        static byte[] zero = { 0x00 };
         protected static Int32 s_gsPort = 4000;
-        protected ClientlessBot m_owner;
 
-        TcpClient m_gsSocket;
-        NetworkStream m_gsStream;
-
-        public void Write(byte[] packet)
-        {
-            m_gsStream.Write(packet, 0, packet.Length);
-        }
-
-        protected byte[] BuildPacket(byte command, params IEnumerable<byte>[] args)
+        public override byte[] BuildPacket(byte command, params IEnumerable<byte>[] args)
         {
             List<byte> packet = new List<byte>();
 
@@ -39,12 +29,10 @@ namespace CSharpClient
             return bytes;
         }
 
-        public GameServer(ClientlessBot cb)
+        public GameServer(ClientlessBot cb) : base(cb)
         {
-            m_owner = cb;
-            m_gsSocket = new TcpClient();
         }
-        public void GameServerThreadFunction()
+        public override void ThreadFunction()
         {
 
             //Initialize the game's data
@@ -52,8 +40,8 @@ namespace CSharpClient
             Console.Write("{0}: [D2GS] Connecting to Game Server {1}:{2} .......",m_owner.Account,m_owner.GsIp,s_gsPort);
             try
             {
-                m_gsSocket.Connect(m_owner.GsIp, s_gsPort);
-                m_gsStream = m_gsSocket.GetStream();
+                m_socket.Connect(m_owner.GsIp, s_gsPort);
+                m_stream = m_socket.GetStream();
                 Console.WriteLine(" Connected");
             }
             catch
@@ -68,7 +56,7 @@ namespace CSharpClient
             Int32 bytesRead;
             while (true)
             {
-                if(!m_gsStream.DataAvailable)
+                if (!m_stream.DataAvailable)
                 {
                     if (ClientlessBot.debugging)
                         Console.WriteLine("{0}: [D2GS] Disconnected from game server", m_owner.Account);
@@ -80,7 +68,7 @@ namespace CSharpClient
                     m_owner.Status = ClientlessBot.ClientStatus.STATUS_NOT_IN_GAME;
                     break;
                 }
-                bytesRead = m_gsStream.Read(byteBuffer, 0, byteBuffer.Length);
+                bytesRead = m_stream.Read(byteBuffer, 0, byteBuffer.Length);
 
                 buffer.AddRange(byteBuffer);
                 while (true)

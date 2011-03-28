@@ -255,7 +255,6 @@ namespace CSharpClient
             m_bncsThread = new Thread(m_bncs.ThreadFunction);
             m_mcpThread = new Thread(m_mcp.ThreadFunction);
             m_gameCreationThread = new Thread(m_mcp.CreateGameThreadFunction);
-            m_gsThread = new Thread(m_gs.GameServerThreadFunction);
             m_bncsThread.Start();
         }
         ~ClientlessBot()
@@ -277,6 +276,7 @@ namespace CSharpClient
 
         public void StartGameServerThread()
         {
+            m_gsThread = new Thread(m_gs.ThreadFunction);
             m_gsThread.Start();
         }
 
