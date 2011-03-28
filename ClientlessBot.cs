@@ -29,6 +29,13 @@ namespace CSharpClient
     {
         public static bool debugging = false;
 
+        public enum GameDifficulty
+        {
+            NORMAL = 0,
+            NIGHTMARE = 1,
+            HELL = 2
+        }
+
         public enum ClientStatus
         {
             STATUS_IDLE,
@@ -110,8 +117,8 @@ namespace CSharpClient
             set { m_loggedin = value; }
         }
         // Game difficulty
-        private UInt16 m_difficulty;
-        public UInt16 Difficulty
+        private GameDifficulty m_difficulty;
+        public GameDifficulty Difficulty
         {
             get { return m_difficulty; }
             set { m_difficulty = value; }
@@ -197,8 +204,8 @@ namespace CSharpClient
             set { m_serverToken = value; }
         }
 
-        UInt32 m_gameRequestId;
-        public UInt32 GameRequestId
+        UInt16 m_gameRequestId;
+        public UInt16 GameRequestId
         {
             get { return m_gameRequestId; }
             set { m_gameRequestId = value; }
@@ -214,6 +221,21 @@ namespace CSharpClient
         public RealmServer m_mcp;
         private Thread m_bncsThread;
         private Thread m_mcpThread;
+        private Thread m_gameCreationThread;
+
+        private Boolean m_firstGame;
+        public Boolean FirstGame
+        {
+            get { return m_firstGame; }
+            set { m_firstGame = value; }
+        }
+
+        private Boolean m_failedGame;
+        public Boolean FailedGame
+        {
+            get { return m_failedGame; }
+            set { m_failedGame = value; }
+        }
 
         ClientlessBot()
         {
@@ -225,12 +247,14 @@ namespace CSharpClient
             m_classicKey = "";
             m_expansionKey = "";
             m_keyOwner = "DK";
+            m_difficulty = GameDifficulty.NORMAL;
+            m_gamePassword = "";
 
             m_bncs = new BattleNetCS(this);
             m_mcp = new RealmServer(this);
             m_bncsThread = new Thread(m_bncs.BncsThreadFunction);
             m_mcpThread = new Thread(m_mcp.McpThreadFunction);
-
+            m_gameCreationThread = new Thread(m_mcp.CreateGameThreadFunction);
             m_bncsThread.Start();
         }
         ~ClientlessBot()
@@ -247,6 +271,7 @@ namespace CSharpClient
         {
             Console.WriteLine("{0}: [BOT]  Game creation thread started.", m_account);
             m_bncs.m_bncsSocket.Close();
+            m_gameCreationThread.Start();
         }
 
         public void StartGameServerThread()
@@ -255,7 +280,7 @@ namespace CSharpClient
 
         public void JoinGame()
         {
-
+            Console.WriteLine(" ATTEMPTING TO JOIN GAME, NOT IMPLEMENTED");
         }
 
         static void Main(string[] args)

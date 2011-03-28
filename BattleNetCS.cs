@@ -144,26 +144,16 @@ namespace CSharpClient
             {
                 // Cases in order that they should be received
                 case 0x00:
-                case 0x25:
-                    return PingRequest;
-                case 0x50:
-                    return AuthInfoRequest;
-                case 0x51:
-                    return AuthCheck;
-                case 0x33:
-                    return AccountLogin;
-                case 0x3a:
-                    return LoginResult;
-                case 0x40:
-                    return RealmList;
-                case 0x3e:
-                    return StartMcp;
-                case 0x0a:
-                    return EnterChat;
-                case 0x15:
-                    return HandleAdvertising;
-                default:
-                    return VoidRequest;
+                case 0x25: return PingRequest;
+                case 0x50: return AuthInfoRequest;
+                case 0x51: return AuthCheck;
+                case 0x33: return AccountLogin;
+                case 0x3a: return LoginResult;
+                case 0x40: return RealmList;
+                case 0x3e: return StartMcp;
+                case 0x0a: return EnterChat;
+                case 0x15: return HandleAdvertising;
+                default:   return VoidRequest;
             }
         }
 
@@ -240,7 +230,8 @@ namespace CSharpClient
                //make_game();
 			} else {
 
-				 Console.WriteLine("{0}: [BNCS] Logging on to the realm {1}", m_owner.Account, m_owner.Realm);
+                if (ClientlessBot.debugging)
+                    Console.WriteLine("{0}: [BNCS] Logging on to the realm {1}", m_owner.Account, m_owner.Realm);
 
 				UInt32 clientToken = 1;
                 byte[] packet = BuildPacket((byte)0x3e, BitConverter.GetBytes(clientToken), Bsha1.DoubleHash(clientToken, m_owner.ServerToken, "password"), System.Text.Encoding.ASCII.GetBytes(m_owner.Realm), zero);
@@ -272,7 +263,7 @@ namespace CSharpClient
 			switch(result)
 			{
 				case 0x00:
-					Console.WriteLine("{0}: [BNCS] Successfully logged into the account ", m_owner.Account);
+                    if (ClientlessBot.debugging) Console.WriteLine("{0}: [BNCS] Successfully logged into the account ", m_owner.Account);
                     break;
 				case 0x01:
 					Console.WriteLine("{0}: [BNCS] Account does not exist", m_owner.Account);
@@ -311,17 +302,19 @@ namespace CSharpClient
 
             byte[] packet = BuildPacket((byte)0x3a, BitConverter.GetBytes(client_token), BitConverter.GetBytes(m_owner.ServerToken), hash, System.Text.Encoding.ASCII.GetBytes(m_owner.Account), zero);
 
-            Console.WriteLine("\tWriting to Stream: ");
-            for (int i = 0; i < packet.Length; i++)
+            if (ClientlessBot.debugging)
             {
-                if (i % 8 == 0 && i != 0)
-                    Console.Write(" ");
-                if (i % 16 == 0 && i != 0)
-                    Console.WriteLine("");
-                Console.Write("{0:X2} ", packet[i]);
+                Console.WriteLine("\tWriting to Stream: ");
+                for (int i = 0; i < packet.Length; i++)
+                {
+                    if (i % 8 == 0 && i != 0)
+                        Console.Write(" ");
+                    if (i % 16 == 0 && i != 0)
+                        Console.WriteLine("");
+                    Console.Write("{0:X2} ", packet[i]);
+                }
+                Console.WriteLine("");
             }
-            Console.WriteLine("");
-
             m_bncsStream.Write(packet, 0, packet.Length);
 		}
         
@@ -397,15 +390,21 @@ namespace CSharpClient
 
 
             if (CdKey.GetD2KeyHash(m_owner.ClassicKey, ref  client_token, m_owner.ServerToken, ref classic_hash, ref classic_public))
-                Console.WriteLine("{0}: [BNCS] Successfully generated the classic CD key hash",  m_owner.Account);
+            {
+                if (ClientlessBot.debugging)
+                    Console.WriteLine("{0}: [BNCS] Successfully generated the classic CD key hash", m_owner.Account);
+            }
             else
             {
-                Console.WriteLine("{0}: [BNCS] CD key is invalid",  m_owner.Account);
-                    m_owner.Status = ClientlessBot.ClientStatus.STATUS_INVALID_CD_KEY;
+                Console.WriteLine("{0}: [BNCS] CD key is invalid", m_owner.Account);
+                m_owner.Status = ClientlessBot.ClientStatus.STATUS_INVALID_CD_KEY;
             }
 
             if (CdKey.GetD2KeyHash(m_owner.ExpansionKey, ref client_token, m_owner.ServerToken, ref  lod_hash, ref lod_public))
-                Console.WriteLine("{0}: [BNCS] Successfully generated the lod CD key hash", m_owner.Account);
+            {
+                if (ClientlessBot.debugging)
+                    Console.WriteLine("{0}: [BNCS] Successfully generated the lod CD key hash", m_owner.Account);
+            }
             else
             {
                 Console.WriteLine("{0}: [BNCS] Expansion CD key is invalid", m_owner.Account);

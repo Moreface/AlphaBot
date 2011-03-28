@@ -173,7 +173,7 @@ namespace CSharpClient
 			}
             if (result == 0) {
 				if (ClientlessBot.debugging) Console.WriteLine("{0}: [MCP] Joining the game we just created",m_owner.Account);
-				m_owner.JoinGame();
+				JoinGame();
 			}
         }
 
@@ -234,10 +234,10 @@ namespace CSharpClient
 				m_owner.GsHash = data.GetRange(13, 4);
 				m_owner.GsToken = data.GetRange(5, 2);
 
-                byte[] packeta = m_owner.m_bncs.BuildPacket(0x22, System.Text.Encoding.ASCII.GetBytes(lod_id), BitConverter.GetBytes((UInt32)0xd), System.Text.Encoding.ASCII.GetBytes(m_owner.GameName), zero, System.Text.Encoding.ASCII.GetBytes(m_owner.GamePassword), zero);
-                m_owner.m_bncs.Write(packeta);
-                byte[] packetb = m_owner.m_bncs.BuildPacket(0x10);
-				m_owner.m_bncs.Write(packetb);
+                //byte[] packeta = m_owner.m_bncs.BuildPacket(0x22, System.Text.Encoding.ASCII.GetBytes(lod_id), BitConverter.GetBytes((UInt32)0xd), System.Text.Encoding.ASCII.GetBytes(m_owner.GameName), zero, System.Text.Encoding.ASCII.GetBytes(m_owner.GamePassword), zero);
+                //m_owner.m_bncs.Write(packeta);
+                //byte[] packetb = m_owner.m_bncs.BuildPacket(0x10);
+				//m_owner.m_bncs.Write(packetb);
 
                 m_owner.StartGameServerThread();
 			}
@@ -374,6 +374,54 @@ namespace CSharpClient
         private void VoidRequest(byte type, ArrayList data, byte[] dataBytes)
         {
             Console.WriteLine("{0}: [MCP] Unknown Packet Received... Ignoring packet type: {1:X} ...", m_owner.Account,type);
+        }
+
+        public void CreateGameThreadFunction()
+        {
+            while (true) {
+		        while (m_owner.Status != ClientlessBot.ClientStatus.STATUS_NOT_IN_GAME)
+			        System.Threading.Thread.Sleep(1000);
+
+		        System.Threading.Thread.Sleep(30000);
+		        if (m_owner.FirstGame)
+			        System.Threading.Thread.Sleep(30000);
+                if(m_owner.Status == ClientlessBot.ClientStatus.STATUS_NOT_IN_GAME) 
+                {
+       		        MakeGame();    
+                }
+                System.Threading.Thread.Sleep(5000);
+	        }
+        }
+
+        private void JoinGame()
+        {
+            Write(BuildPacket(0x04,BitConverter.GetBytes(m_owner.GameRequestId),System.Text.Encoding.ASCII.GetBytes(m_owner.GameName), zero, System.Text.Encoding.ASCII.GetBytes(m_owner.GamePassword),zero));
+            m_owner.GameRequestId++;
+        }
+        private void MakeGame()
+        {
+            if (m_owner.Password.Length == 0)
+	            m_owner.Password = "xa1";
+
+            m_owner.GameName = Utils.RandomString(10);
+            if (m_owner.FailedGame) {
+	            Console.WriteLine("{0}: [BNCS] Last game failed, sleeping.", m_owner.Account);
+	            //debug_log.write("[" + nil::timestamp() + "] Last game failed, sleeping.\n");
+	            System.Threading.Thread.Sleep(30000);
+            }
+
+            // We assume the game fails every game, until it proves otherwise at end of botthread.
+            m_owner.FailedGame = true;
+
+            Console.WriteLine("{0}: [MCP] Creating game \"{1}\" with password \"{2}\"",m_owner.Account,m_owner.GameName,m_owner.GamePassword);
+            //debug_log.write("[" + nil::timestamp() + "] Creating game \"" + game_name + "\" with password \"" + game_password + "\"\n");
+                
+            byte[] temp = {0x01,0xff,0x08 };
+            byte[] packet = BuildPacket(0x03, BitConverter.GetBytes((UInt16)m_owner.GameRequestId), BitConverter.GetBytes(Utils.GetDifficulty(m_owner.Difficulty)), temp, System.Text.Encoding.ASCII.GetBytes(m_owner.GameName), zero,
+                            System.Text.Encoding.ASCII.GetBytes(m_owner.GamePassword), zero, zero);
+                
+            Write(packet);
+            m_owner.GameRequestId++;
         }
 
         public void McpThreadFunction()

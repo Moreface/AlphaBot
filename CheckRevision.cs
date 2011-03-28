@@ -1,4 +1,4 @@
-﻿/*
+﻿/*  Copyright (c) 2010 Daniel Kuwahara
  *    This file is part of AlphaBot.
 
     AlphaBot is free software: you can redistribute it and/or modify

@@ -55,6 +55,34 @@ namespace CSharpClient
             return output;
         }
 
+        public static UInt32 GetDifficulty(ClientlessBot.GameDifficulty difficulty)
+        {
+	        switch(difficulty)
+	        {
+		        default:
+		        case ClientlessBot.GameDifficulty.NORMAL:
+			        return 0x0000;
+		        case ClientlessBot.GameDifficulty.NIGHTMARE:
+			        return 0x1000;
+		        case ClientlessBot.GameDifficulty.HELL:
+			        return 0x2000;
+	        }
+        }
+
+        public static string RandomString(int size)
+        {
+            StringBuilder builder = new StringBuilder();
+            Random random = new Random();
+            char ch;
+            for (int i = 0; i < size; i++)
+            {
+                ch = Convert.ToChar(Convert.ToInt32(Math.Floor(26 * random.NextDouble() + 97)));
+                builder.Append(ch);
+            }
+
+            return builder.ToString();
+        }
+
 
     }
 }
