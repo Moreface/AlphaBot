@@ -208,7 +208,7 @@ namespace CSharpClient
 			}
 
 			if (result == 0) {
-                UInt32 ip = BitConverter.ToUInt32(data.ToArray(), 9);
+                UInt32 ip = (UInt32) IPAddress.NetworkToHostOrder((int)BitConverter.ToUInt32(data.ToArray(), 9));
 				m_owner.GsIp = IPAddress.Parse(ip.ToString());
 				m_owner.GsHash = data.GetRange(13, 4);
 				m_owner.GsToken = data.GetRange(5, 2);

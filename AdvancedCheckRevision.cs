@@ -26,11 +26,11 @@ namespace CSharpClient
 
         protected static uint[] hashes = new uint[] { 0xE7F4CB62, 0xF6A14FFC, 0xAA5504AF, 0x871FCDC2, 0x11BF6A18, 0xC57292E6, 0x7927D27E, 0x2FEC8733 };
 
-        public static uint FastComputeHash(string formula, string mpqFile, FileStream gameExe, FileStream bnclientDll, FileStream d2clientDll)
+        public static uint FastComputeHash(string formula, string mpqFile, String gameExe, String bnclientDll, String d2clientDll)
         {
-            byte[] game = File.ReadAllBytes(gameExe.Name);
-            byte[] bnclient = File.ReadAllBytes(bnclientDll.Name);
-            byte[] d2client = File.ReadAllBytes(d2clientDll.Name);
+            byte[] game = File.ReadAllBytes(gameExe);
+            byte[] bnclient = File.ReadAllBytes(bnclientDll);
+            byte[] d2client = File.ReadAllBytes(d2clientDll);
 
             int mpq = Convert.ToInt32(mpqFile[mpqFile.LastIndexOf('.') - 1].ToString(), 10);
             uint[] values = new uint[4];

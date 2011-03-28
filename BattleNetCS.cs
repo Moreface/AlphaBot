@@ -343,12 +343,12 @@ namespace CSharpClient
                 offset = 24;
             else
                 offset = 24;
-            Console.WriteLine((char)data.ToArray()[24]);
+            //Console.WriteLine((char)data.ToArray()[24]);
 
             String mpq_file_name = Utils.readNullTerminatedString(System.Text.Encoding.ASCII.GetString(data.ToArray()), ref offset);
-            Console.WriteLine(mpq_file_name[0]);
+            //Console.WriteLine(mpq_file_name[0]);
             String formula_string = Utils.readNullTerminatedString(System.Text.Encoding.ASCII.GetString(data.ToArray()), ref offset);
-            Console.WriteLine(formula_string[0]);
+            //Console.WriteLine(formula_string[0]);
 
             if (ClientlessBot.debugging)
             {
@@ -357,7 +357,9 @@ namespace CSharpClient
                 Console.WriteLine("\tMPQ File Name: {0}", mpq_file_name);
                 Console.WriteLine("\tFormula String: {0}", formula_string);
             }
-            uint exe_checksum = 0;
+            uint exe_checksum = AdvancedCheckRevision.FastComputeHash(formula_string, mpq_file_name, m_owner.BinaryDirectory + "Game.exe", 
+                                                            m_owner.BinaryDirectory + "Bnclient.dll", m_owner.BinaryDirectory + "D2Client.dll");
+            /*
             switch (CheckRevision.DoCheck(formula_string, mpq_file_name,  m_owner.BinaryDirectory, ref exe_checksum))
             {
                 case CheckRevision.CheckRevisionResult.CHECK_REVISION_SUCCESS:
@@ -369,7 +371,7 @@ namespace CSharpClient
                         Console.WriteLine("\t\tCheck Revision Failed");
                     break;
             }
-
+            */
             uint client_token = (uint)System.Environment.TickCount;
 
             List<byte> classic_hash = new List<byte>(), lod_hash = new List<byte>(), classic_public = new List<byte>(), lod_public = new List<byte>();
