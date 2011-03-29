@@ -135,7 +135,8 @@ namespace CSharpClient
             packet.AddRange(BitConverter.GetBytes((uint)System.Environment.TickCount));
             packet.AddRange(nulls);
             packet.AddRange(nulls);
-            Write(packet.ToArray());
+            byte[] bytePacket = packet.ToArray();
+            Write(bytePacket);
         }
 
         protected void GameLoading(byte type, List<byte> data)
@@ -165,46 +166,63 @@ namespace CSharpClient
             m_owner.ConnectedToGs = true;
             List<byte> buffer = new List<byte>();
             byte[] byteBuffer = new byte[4096];
-            Int32 bytesRead;
+            Int32 bytesRead = 0;
             while (true)
             {
                 try
                 {
-                    bytesRead = m_stream.Read(byteBuffer, 0, byteBuffer.Length);
+                    /*
+                    while (m_stream.DataAvailable)
+                    {
+                        buffer.Add((byte)m_stream.ReadByte());
+                        if(!m_stream.DataAvailable)
+                            Console.WriteLine("{0}: [D2GS] Finished Reading to Buffer...", m_owner.Account);
+                    }
+                    */
+                    if (m_stream.DataAvailable)
+                    {
+                        bytesRead = m_stream.Read(byteBuffer, 0, byteBuffer.Length);
+                        buffer.AddRange(new List<byte>(byteBuffer).GetRange(0, bytesRead));
+                    }
+
                 }
                 catch
                 {
                     //if (ClientlessBot.debugging)
-                        Console.WriteLine("{0}: [D2GS] Disconnected from game server", m_owner.Account);
+                    Console.WriteLine("{0}: [D2GS] Disconnected from game server", m_owner.Account);
                     if (m_owner.ConnectedToGs)
                     {
                         m_owner.ConnectedToGs = false;
-                        m_pingThread.Join();
+                        if (m_pingThread.IsAlive)
+                            m_pingThread.Join();
                         // Join threads
                     }
                     m_owner.Status = ClientlessBot.ClientStatus.STATUS_NOT_IN_GAME;
                     break;
                 }
+                
 
-                buffer.AddRange(new List<byte>(byteBuffer).GetRange(0,bytesRead));
                 while (true)
                 {
-                    UInt16 receivedPacket = BitConverter.ToUInt16(byteBuffer,0);
+                    UInt16 receivedPacket = 0;
+                    if(buffer.Count >= 2)
+                        receivedPacket = BitConverter.ToUInt16(buffer.ToArray(),0);
                     if (buffer.Count >= 2 && receivedPacket == (UInt16)0x01af)
                     {
                         //if (ClientlessBot.debugging)
                             Console.WriteLine("{0}: [D2GS] Logging on to game server", m_owner.Account);
 
-                        byte[] temp = {0x50, 0xcc, 0x5d, 0xed, 0xb6, 0x19, 0xa5, 0x91};
+                        byte[] temp = {0x50, 0xcc, 0x5d, 0xed, 
+                                       0xb6, 0x19, 0xa5, 0x91};
 
                         Int32 pad = 16 - m_owner.Character.Length;
 
                         byte[] padding = new byte[pad];
-
-                        byte[] joinpacket = BuildPacket(0x68, m_owner.GsHash, m_owner.GsToken, new List<byte>(m_owner.ClassByte) , BitConverter.GetBytes((UInt32)0xd), temp, zero, System.Text.Encoding.ASCII.GetBytes(m_owner.Character), padding);
+                        byte[] characterClass = { m_owner.ClassByte };
+                        byte[] joinpacket = BuildPacket(0x68, m_owner.GsHash, m_owner.GsToken, characterClass, BitConverter.GetBytes((UInt32)0xd), temp, zero, System.Text.Encoding.ASCII.GetBytes(m_owner.Character), padding);
                         Write(joinpacket);
+                        Console.WriteLine("{0}: [D2GS] Join packet sent to server", m_owner.Account);
                         buffer.RemoveRange(0, 2);
-                        continue;
                     }
 
                     if (buffer.Count < 2 || (buffer[0] >= 0xF0 && buffer.Count < 3))
@@ -212,14 +230,13 @@ namespace CSharpClient
                         break;
                     }
 
-                    Int32 headerSize = 0;
-                    Int32 length = Huffman.GetPacketSize(buffer, ref headerSize);
-                    length += headerSize;
+                    Int32 headerSize;
+                    Int32 length = Huffman.GetPacketSize(buffer, out headerSize);
                     if (length > buffer.Count)
                         break;
 
-                    byte[] compressedPacket = buffer.GetRange(0, length).ToArray();
-                    buffer.RemoveRange(0, length);
+                    byte[] compressedPacket = buffer.GetRange(headerSize, length).ToArray();
+                    buffer.RemoveRange(0, length+headerSize);
 
 
                     byte[] decompressedPacket;
@@ -231,6 +248,7 @@ namespace CSharpClient
                         if(!GetPacketSize(packet,out packetSize))
                         {
                             Console.WriteLine("{0}: [D2GS] Failed to determine packet length",m_owner.Account);
+                            break;
                         }
                         List<byte> actualPacket = new List<byte>(packet.GetRange(0,packetSize));
                         packet.RemoveRange(0, packetSize);
