@@ -64,6 +64,7 @@
     <Compile Include="CdKey.cs" />
     <Compile Include="CheckRevision.cs" />
     <Compile Include="ClientlessBot.cs" />
+    <Compile Include="Compression.cs" />
     <Compile Include="GameServer.cs" />
     <Compile Include="GenericServerConnection.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
