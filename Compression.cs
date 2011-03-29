@@ -235,7 +235,7 @@ namespace CSharpClient
 
         public static Int32 GetPacketSize(List<byte> buffer, ref Int32 headerSize)
         {
-            if (buffer[0] == (byte)0xF0)
+            if (buffer[0] < (byte)0xF0)
             {
                 headerSize = 1;
                 return buffer[0] - 1;
