@@ -76,8 +76,11 @@ namespace CSharpClient
             char ch;
             for (int i = 0; i < size; i++)
             {
-                ch = Convert.ToChar(Convert.ToInt32(Math.Floor(26 * random.NextDouble() + 97)));
-                builder.Append(ch);
+                ch = Convert.ToChar(Convert.ToInt32(Math.Floor(26 * random.NextDouble() + 97 )));
+                if (i == 0)
+                    builder.Append(Char.ToUpper(ch));
+                else
+                    builder.Append(ch);
             }
 
             return builder.ToString();
