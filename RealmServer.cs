@@ -273,18 +273,40 @@ namespace CSharpClient
                     offset += 4;
                     String dataString = System.Text.Encoding.ASCII.GetString(data.ToArray());
                     String characterName = Utils.readNullTerminatedString(dataString, ref offset);
-                    int oldoffset = offset;
-                    String stats = Utils.readNullTerminatedString(dataString, ref offset);
-                    List<byte> statList = data.GetRange(oldoffset, offset - oldoffset);
-                    // This section needs to be finished to gather character info
-                    /*
-                     *
-                     * 
-                     * Some stats stuff needs to go here... too lazy........
-                     * 
-                     * 
-                     */
+                    int length = data.IndexOf(0, offset)-offset;
+                    List<byte> stats = data.GetRange(offset,length);
+                    offset += length;
+                    m_owner.ClassByte =(byte)((stats[13] - 0x01) & 0xFF);
+                    byte level = stats[25];
+                    byte flags = stats[26];
+                    bool hardcore = (flags & 0x04) != 0;
+                    bool dead = (flags & 0x08) != 0;
+                    bool expansion = (flags & 0x20) != 0;
+                    String coreString = hardcore ? "Hardcore" : "Softcore";
+                    String versionString = expansion ? "Expansion" : "Classic";
+                    String classType;
 
+                    switch (m_owner.ClassByte)
+                    {
+                        case 0: classType = "Amazon";
+                            break;
+                        case 1: classType = "Sorceress";
+                            break;
+                        case 2: classType = "Necromancer";
+                            break;
+                        case 3: classType = "Paladin";
+                            break;
+                        case 4: classType = "Barbarian";
+                            break;
+                        case 5: classType = "Druid";
+                            break;
+                        case 6: classType = "Assassin";
+                            break;
+                        default: classType = "Unknown";
+                            break;
+                    }
+
+                    Console.WriteLine("{0}: [MCP] {1}. {2}, Level: {3}, {6} ({4}|{5})", m_owner.Account, i, characterName, level, coreString, versionString, classType);
 
                     if (m_owner.Character == null && i == 1)
                     {

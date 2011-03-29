@@ -217,14 +217,6 @@ namespace CSharpClient
             set { m_inGame = value; }
         }
 
-        public BattleNetCS m_bncs;
-        public RealmServer m_mcp;
-        public GameServer m_gs;
-        protected Thread m_bncsThread;
-        protected Thread m_mcpThread;
-        protected Thread m_gameCreationThread;
-        protected Thread m_gsThread;
-
         protected Boolean m_firstGame;
         public Boolean FirstGame
         {
@@ -245,6 +237,21 @@ namespace CSharpClient
             get { return m_connectedToGs; }
             set { m_connectedToGs = value; }
         }
+
+        private Byte m_classByte;
+        public Byte ClassByte
+        {
+            get { return m_classByte; }
+            set { m_classByte = value; }
+        }
+
+        public BattleNetCS m_bncs;
+        public RealmServer m_mcp;
+        public GameServer m_gs;
+        protected Thread m_bncsThread;
+        protected Thread m_mcpThread;
+        protected Thread m_gameCreationThread;
+        protected Thread m_gsThread;
 
         ClientlessBot()
         {

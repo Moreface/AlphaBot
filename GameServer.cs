@@ -85,11 +85,16 @@ namespace CSharpClient
 
                         byte[] padding = new byte[pad];
 
-                        byte[] packet = BuildPacket(0x68, m_owner.GsHash, m_owner.GsToken, /*m_owner.ClassByte,*/ BitConverter.GetBytes((UInt32)0xd), temp, zero, System.Text.Encoding.ASCII.GetBytes(m_owner.Character), padding);
+                        byte[] packet = BuildPacket(0x68, m_owner.GsHash, m_owner.GsToken, new List<byte>(m_owner.ClassByte) , BitConverter.GetBytes((UInt32)0xd), temp, zero, System.Text.Encoding.ASCII.GetBytes(m_owner.Character), padding);
                         buffer.RemoveRange(0, 2);
-                        byteBuffer = new byte[buffer.Count];
-                        buffer.CopyTo(byteBuffer, 0);
+                        //byteBuffer = new byte[buffer.Count];
+                        //buffer.CopyTo(byteBuffer, 0);
                         continue;
+                    }
+
+                    if (buffer.Count < 2 || (buffer[0] >= 0xF0 && buffer.Count < 3))
+                    {
+                        break;
                     }
 
                 }
