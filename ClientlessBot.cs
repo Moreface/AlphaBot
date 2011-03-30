@@ -105,6 +105,8 @@ namespace CSharpClient
         protected Boolean m_pindle, m_eldritch, m_shenk;
         // Chicken and Potion Values
         protected UInt32 m_chickenLife, m_potLife;
+        public UInt32 ChickenLife { get { return m_chickenLife; } set { m_chickenLife = value; } }
+        public UInt32 PotLife { get { return m_potLife; } set { m_potLife = value; } }
         // Server information
         protected String m_battleNetServer, m_realm;
         public String BattleNetServer { get { return m_battleNetServer; } set { m_battleNetServer = value; } }
@@ -153,10 +155,33 @@ namespace CSharpClient
         protected Thread m_mcpThread;
         protected Thread m_gameCreationThread;
         protected Thread m_gsThread;
+        /*
+         * 
+         * In Game API
+         * 
+         * 
+         */
+
+        public void LeaveGame()
+        {
+
+        }
+
+        public void UsePotion()
+        {
+
+        }
+
+        /*
+         * 
+         * Constructor
+         * 
+         * 
+         */
 
         ClientlessBot()
         {
-           
+
 
             m_bncs = new BattleNetCS(this);
             m_mcp = new RealmServer(this);
