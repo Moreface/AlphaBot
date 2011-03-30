@@ -317,6 +317,7 @@ namespace CSharpClient
                     if (m_owner.Character.Equals(characterName))
                     {
                         foundCharacter = true;
+                        m_owner.CharacterLevel = level;
                     }
                 }
                 if (selectFirstCharacter)
