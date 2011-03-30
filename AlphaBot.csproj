@@ -60,6 +60,7 @@
   <ItemGroup>
     <Compile Include="AdvancedCheckRevision.cs" />
     <Compile Include="BattleNetCS.cs" />
+    <Compile Include="BitReader.cs" />
     <Compile Include="Bsha1.cs" />
     <Compile Include="CdKey.cs" />
     <Compile Include="CheckRevision.cs" />
