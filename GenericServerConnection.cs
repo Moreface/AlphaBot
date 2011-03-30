@@ -8,11 +8,11 @@ namespace CSharpClient
 {
     class GenericServerConnection
     {
-        static protected byte[] nulls = { 0x00, 0x00, 0x00, 0x00 };
-        static protected byte[] ten = { 0x10, 0x00, 0x00, 0x00 };
-        static protected byte[] six = { 0x06, 0x00, 0x00, 0x00 };
-        static protected byte[] zero = { 0x00 };
-        static protected byte[] one = { 0x01, 0x00, 0x00, 0x00 };
+        static public byte[] nulls = { 0x00, 0x00, 0x00, 0x00 };
+        static public byte[] ten = { 0x10, 0x00, 0x00, 0x00 };
+        static public byte[] six = { 0x06, 0x00, 0x00, 0x00 };
+        static public byte[] zero = { 0x00 };
+        static public byte[] one = { 0x01, 0x00, 0x00, 0x00 };
 
         static protected String platform = "68XI", classic_id = "VD2D", lod_id = "PX2D";
 
