@@ -55,104 +55,51 @@ namespace CSharpClient
             STATUS_NOT_IN_GAME
         };
 
+        protected GameData m_gameData;
+        public GameData BotGameData { get { return m_gameData; } } 
 
         protected String m_gameName;
-        public String GameName
-        {
-            get { return m_gameName; }
-            set { m_gameName = value; }
-        }
+        public String GameName { get { return m_gameName; } set { m_gameName = value; } }
+        
         protected String m_gamePassword;
-        public String GamePassword
-        {
-            get { return m_gamePassword; }
-            set { m_gamePassword = value; }
-        }
+        public String GamePassword { get { return m_gamePassword; } set { m_gamePassword = value; } }
+        
         protected IPAddress m_gsIp;
-        public IPAddress GsIp
-        {
-            get { return m_gsIp; }
-            set { m_gsIp = value; }
-        }
+        public IPAddress GsIp { get { return m_gsIp; } set { m_gsIp = value; } }
 
         protected List<byte> m_gsHash;
-        public List<byte> GsHash
-        {
-            get { return m_gsHash; }
-            set { m_gsHash = value; }
-        }
+        public List<byte> GsHash { get { return m_gsHash; } set { m_gsHash = value; } }
 
         protected List<byte> m_gsToken;
-        public List<byte> GsToken
-        {
-            get { return m_gsToken; }
-            set { m_gsToken = value; }
-        }
+        public List<byte> GsToken { get { return m_gsToken; } set { m_gsToken = value; } }
 
         protected UInt16 m_mcpPort;
-        public UInt16 McpPort
-        {
-            get { return m_mcpPort; }
-            set { m_mcpPort = value; }
-        }
+        public UInt16 McpPort { get { return m_mcpPort; } set { m_mcpPort = value; } }
+        
         protected IPAddress m_mcpIp;
-        public IPAddress McpIp
-        {
-            get { return m_mcpIp; }
-            set { m_mcpIp= value; }
-        }
+        public IPAddress McpIp { get { return m_mcpIp; } set { m_mcpIp= value; } }
 
         protected List<byte> m_mcpData;
-        public List<byte> McpData
-        {
-            get { return m_mcpData; }
-            set { m_mcpData = value; }
-        }
+        public List<byte> McpData { get { return m_mcpData; } set { m_mcpData = value; } }
 
 
         protected Boolean m_loggedin;
-        public Boolean LoggedIn
-        {
-            get { return m_loggedin; }
-            set { m_loggedin = value; }
-        }
+        public Boolean LoggedIn { get { return m_loggedin; } set { m_loggedin = value; } }
+        
         // Game difficulty
         protected GameDifficulty m_difficulty;
-        public GameDifficulty Difficulty
-        {
-            get { return m_difficulty; }
-            set { m_difficulty = value; }
-        }
+        public GameDifficulty Difficulty { get { return m_difficulty; } set { m_difficulty = value; } }
+        
         // Account Name, Password, and Character Name
         protected String m_account, m_password, m_character;
-        public String Account
-        {
-            get { return m_account; }
-            set { m_account = value; }
-        }
-        public String Password
-        {
-            get { return m_password; }
-            set { m_password = value; }
-        }
-        public String Character
-        {
-            get { return m_character; }
-            set { m_character = value; }
-        }
+        public String Account { get { return m_account; } set { m_account = value; } }
+        public String Password { get { return m_password; } set { m_password = value; } }
+        public String Character { get { return m_character; } set { m_character = value; } }
 
         // CD-Key Values
         protected String m_classicKey, m_expansionKey;
-        public String ClassicKey
-        {
-            get { return m_classicKey; }
-            set { m_classicKey = value; }
-        }
-        public String ExpansionKey
-        {
-            get { return m_expansionKey; }
-            set { value = m_expansionKey; }
-        }
+        public String ClassicKey { get { return m_classicKey; } set { m_classicKey = value; } }
+        public String ExpansionKey { get { return m_expansionKey; } set { value = m_expansionKey; } }
 
         // Bosses to kill
         protected Boolean m_pindle, m_eldritch, m_shenk;
@@ -160,91 +107,45 @@ namespace CSharpClient
         protected UInt32 m_chickenLife, m_potLife;
         // Server information
         protected String m_battleNetServer, m_realm;
-        public String BattleNetServer
-        {
-            get { return m_battleNetServer; }
-            set { m_battleNetServer = value; }
-        }
-        public String Realm
-        {
-            get { return m_realm; }
-            set { m_realm = value; }
-        }
+        public String BattleNetServer { get { return m_battleNetServer; } set { m_battleNetServer = value; } }
+        public String Realm { get { return m_realm; } set { m_realm = value; } }
 
         protected String m_gameExeInformation;
-        public String GameExeInformation
-        {
-            get { return m_gameExeInformation; }
-            set { m_gameExeInformation = value; }
-        }
+        public String GameExeInformation { get { return m_gameExeInformation; } set { m_gameExeInformation = value; } }
+        
         protected String m_keyOwner;
-        public String KeyOwner
-        {
-            get { return m_keyOwner; }
-            set { m_keyOwner = value; }
-        }
+        public String KeyOwner { get { return m_keyOwner; } set { m_keyOwner = value; } }
 
         protected String m_binaryDirectory;
-        public String BinaryDirectory
-        {
-            get { return m_binaryDirectory; }
-            set { m_binaryDirectory = value; }
-        }
+        public String BinaryDirectory { get { return m_binaryDirectory; } set { m_binaryDirectory = value; } }
+        
         protected ClientStatus m_status;
-        public ClientStatus Status
-        {
-            get { return m_status; }
-            set { m_status = value; }
-        }
+        public ClientStatus Status { get { return m_status; } set { m_status = value; } }
 
         protected UInt32 m_serverToken;
-        public UInt32 ServerToken
-        {
-            get { return m_serverToken; }
-            set { m_serverToken = value; }
-        }
+        public UInt32 ServerToken { get { return m_serverToken; } set { m_serverToken = value; } }
 
-        UInt16 m_gameRequestId;
-        public UInt16 GameRequestId
-        {
-            get { return m_gameRequestId; }
-            set { m_gameRequestId = value; }
-        }
+        protected UInt16 m_gameRequestId;
+        public UInt16 GameRequestId { get { return m_gameRequestId; } set { m_gameRequestId = value; } }
+        
         Boolean m_inGame;
-        public Boolean InGame
-        {
-            get { return m_inGame; }
-            set { m_inGame = value; }
-        }
+        public Boolean InGame { get { return m_inGame; } set { m_inGame = value; } }
 
         protected Boolean m_firstGame;
-        public Boolean FirstGame
-        {
-            get { return m_firstGame; }
-            set { m_firstGame = value; }
-        }
+        public Boolean FirstGame { get { return m_firstGame; } set { m_firstGame = value; } }
 
         protected Boolean m_failedGame;
-        public Boolean FailedGame
-        {
-            get { return m_failedGame; }
-            set { m_failedGame = value; }
-        }
+        public Boolean FailedGame { get { return m_failedGame; } set { m_failedGame = value; } }
 
         protected Boolean m_connectedToGs;
-        public Boolean ConnectedToGs
-        {
-            get { return m_connectedToGs; }
-            set { m_connectedToGs = value; }
-        }
+        public Boolean ConnectedToGs { get { return m_connectedToGs; } set { m_connectedToGs = value; } }
 
         private Byte m_classByte;
-        public Byte ClassByte
-        {
-            get { return m_classByte; }
-            set { m_classByte = value; }
-        }
+        public Byte ClassByte { get { return m_classByte; } set { m_classByte = value; } }
 
+        private UInt32 m_characterLevel;
+        public UInt32 CharacterLevel { get { return m_characterLevel; } set { m_characterLevel = value; } }
+        
         public BattleNetCS m_bncs;
         public RealmServer m_mcp;
         public GameServer m_gs;
@@ -255,12 +156,14 @@ namespace CSharpClient
 
         ClientlessBot()
         {
+           
 
             m_bncs = new BattleNetCS(this);
             m_mcp = new RealmServer(this);
             m_gs = new GameServer(this);
             m_bncsThread = new Thread(m_bncs.ThreadFunction);
             m_mcpThread = new Thread(m_mcp.ThreadFunction);
+            m_gameData = new GameData();
             m_gameCreationThread = new Thread(m_mcp.CreateGameThreadFunction);
             m_bncsThread.Start();
         }
@@ -285,6 +188,32 @@ namespace CSharpClient
         {
             m_gsThread = new Thread(m_gs.ThreadFunction);
             m_gsThread.Start();
+        }
+
+        public void InitializeGameData()
+        {
+            m_gameData.FullyEnteredGame = false;
+            m_gameData.LastTeleport = 0;
+            m_gameData.Experience = 0;
+            m_gameData.Me = new Player();
+
+            m_gameData.SkillLevels.Clear();
+            m_gameData.ItemSkillLevels.Clear();
+            m_gameData.Players.Clear();
+            m_gameData.Npcs.Clear();
+            m_gameData.Items.Clear();
+
+            m_gameData.Inventory = new Container("Inventory", GameData.InventoryWidth, GameData.InventoryHeight);
+            m_gameData.Stash = new Container("Stash", GameData.StashWidth, GameData.StashHeight);
+            m_gameData.Cube = new Container("Cube", GameData.CubeWidth, GameData.CubeHeight);
+            m_gameData.Belt = new Container("Belt", 4, 4);
+
+            m_gameData.MalahId = 0;
+            m_gameData.CurrentLife = 0;
+            m_gameData.FirstNpcInfoPacket = true;
+            m_gameData.AttacksSinceLastTeleport = 0;
+            m_gameData.WeaponSet = 0;
+            m_gameData.HasMerc = false;
         }
 
         static void Main(string[] args)
