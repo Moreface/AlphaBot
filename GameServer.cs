@@ -135,6 +135,32 @@ namespace CSharpClient
 
         protected void NpcAssignment(byte type, List<byte> data)
         {
+            byte[] packet = data.ToArray();
+            NpcEntity output;
+            try
+            {
+                BitReader br = new BitReader(data.ToArray());
+                br.ReadBitsLittleEndian(8);
+                UInt32 id = (uint)br.ReadBitsLittleEndian(32);
+                UInt16 npctype = (ushort)br.ReadBitsLittleEndian(16);
+                UInt16 x = (ushort)br.ReadBitsLittleEndian(16);
+                UInt16 y = (ushort)br.ReadBitsLittleEndian(16);
+                byte life = (byte)br.ReadBitsLittleEndian(8);
+                byte size = (byte)br.ReadBitsLittleEndian(8);
+
+                output = new NpcEntity(id, npctype, life, x, y);
+
+                Console.WriteLine("NPC id: {3}, Type: {0:X}, Life: {1:X}, Size: {2:X}", npctype, life, data.Count, id);
+
+                int informationLength = 16;
+
+                m_owner.BotGameData.Npcs.Add(id, output);
+            }
+            catch
+            {
+
+            }
+            
         }
 
         protected void ItemAction(byte type, List<byte> data)
@@ -216,6 +242,11 @@ namespace CSharpClient
             UInt16 y = BitConverter.ToUInt16(packet, 7);
             byte life = packet[9];
 
+            if (!m_owner.BotGameData.Npcs.ContainsKey(id))
+            {
+                Console.WriteLine("{0}: [D2GS] Npc ({1}) not found in map... Adding with type = 0", m_owner.Account, id);
+                m_owner.BotGameData.Npcs.Add(id, new NpcEntity(id, 0, life, x, y));
+            }
             m_owner.BotGameData.Npcs[id].Moving = false;
             m_owner.BotGameData.Npcs[id].Location = new Coordinate(x, y);
             m_owner.BotGameData.Npcs[id].Life = life;
@@ -226,6 +257,12 @@ namespace CSharpClient
             byte[] packet = data.ToArray();
             UInt32 id = BitConverter.ToUInt32(packet, 1);
             byte state = packet[5];
+
+            if (!m_owner.BotGameData.Npcs.ContainsKey(id))
+            {
+                Console.WriteLine("{0}: [D2GS] Npc ({1}) not found in map... Adding with type = 0", m_owner.Account, id);
+                m_owner.BotGameData.Npcs.Add(id, new NpcEntity(id, 0, 0, 0, 0));
+            }
             if (state == 0x09 || state == 0x08)
                 m_owner.BotGameData.Npcs[id].Life = 0;
             else
@@ -249,9 +286,15 @@ namespace CSharpClient
                 running = false;
             else
                 return;
-            m_owner.BotGameData.Npcs[id].Moving = true;
-            m_owner.BotGameData.Npcs[id].Running = running;
-            m_owner.BotGameData.Npcs[id].TargetLocation = new Coordinate(x, y);
+
+            if (!m_owner.BotGameData.Npcs.ContainsKey(id))
+            {
+                Console.WriteLine("{0}: [D2GS] Npc ({1}) not found in map... Adding with type = 0", m_owner.Account, id);
+                m_owner.BotGameData.Npcs.Add(id, new NpcEntity(id, 0, 0, x, y));
+            }
+                m_owner.BotGameData.Npcs[id].Moving = true;
+                m_owner.BotGameData.Npcs[id].Running = running;
+                m_owner.BotGameData.Npcs[id].TargetLocation = new Coordinate(x, y);
         }
 
 
@@ -269,9 +312,16 @@ namespace CSharpClient
                 running = false;
             else
                 return;
+
+            if (!m_owner.BotGameData.Npcs.ContainsKey(id))
+            {
+                Console.WriteLine("{0}: [D2GS] Npc ({1}) not found in map... Adding with type = 0", m_owner.Account, id);
+                m_owner.BotGameData.Npcs.Add(id, new NpcEntity(id, 0, 0, x, y));
+            }
             m_owner.BotGameData.Npcs[id].Moving = true;
             m_owner.BotGameData.Npcs[id].Running = running;
-            m_owner.BotGameData.Npcs[id].TargetLocation = new Coordinate(x,y);
+            m_owner.BotGameData.Npcs[id].TargetLocation = new Coordinate(x, y);
+            
         }
 
         protected void InitializePlayer(byte type, List<byte> data)
