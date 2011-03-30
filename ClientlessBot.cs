@@ -162,6 +162,58 @@ namespace CSharpClient
          * 
          */
 
+        public void CreateGameThreadFunction()
+        {
+            while (true)
+            {
+                //Replace this with mutex  or semaphore
+                while (Status != ClientlessBot.ClientStatus.STATUS_NOT_IN_GAME)
+                    System.Threading.Thread.Sleep(1000);
+
+                System.Threading.Thread.Sleep(30000);
+                if (FirstGame)
+                    System.Threading.Thread.Sleep(30000);
+                if (Status == ClientlessBot.ClientStatus.STATUS_NOT_IN_GAME)
+                {
+                    MakeGame();
+                }
+                System.Threading.Thread.Sleep(5000);
+            }
+        }
+
+        public void JoinGame()
+        {
+            m_mcp.Write(m_mcp.BuildPacket(0x04, BitConverter.GetBytes(GameRequestId), System.Text.Encoding.ASCII.GetBytes(GameName), GenericServerConnection.zero, System.Text.Encoding.ASCII.GetBytes(GamePassword), GenericServerConnection.zero));
+            GameRequestId++;
+        }
+
+        public void MakeGame()
+        {
+            if (Password.Length == 0)
+                Password = "xa1";
+
+            GameName = Utils.RandomString(10);
+            if (FailedGame)
+            {
+                Console.WriteLine("{0}: [BNCS] Last game failed, sleeping.", Account);
+                //debug_log.write("[" + nil::timestamp() + "] Last game failed, sleeping.\n");
+                System.Threading.Thread.Sleep(30000);
+            }
+
+            // We assume the game fails every game, until it proves otherwise at end of botthread.
+            FailedGame = true;
+
+            Console.WriteLine("{0}: [MCP] Creating game \"{1}\" with password \"{2}\"", Account, GameName, GamePassword);
+            //debug_log.write("[" + nil::timestamp() + "] Creating game \"" + game_name + "\" with password \"" + game_password + "\"\n");
+
+            byte[] temp = { 0x01, 0xff, 0x08 };
+            byte[] packet = m_mcp.BuildPacket(0x03, BitConverter.GetBytes((UInt16)GameRequestId), BitConverter.GetBytes(Utils.GetDifficulty(Difficulty)), temp, System.Text.Encoding.ASCII.GetBytes(GameName), GenericServerConnection.zero,
+                            System.Text.Encoding.ASCII.GetBytes(GamePassword), GenericServerConnection.zero, GenericServerConnection.zero);
+
+            m_mcp.Write(packet);
+            GameRequestId++;
+        }
+
         public void LeaveGame()
         {
 
