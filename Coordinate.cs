@@ -32,9 +32,24 @@ namespace CSharpClient
             m_y = y;
         }
 
+        public override bool Equals(object obj)
+        {
+            return this == (Coordinate)obj;
+        }
+
+        public override int GetHashCode()
+        {
+            return m_x^m_y;
+        }
+
         public static bool operator==(Coordinate first, Coordinate second)
         {
             return (first.X == second.X) && (first.Y == second.Y);
+        }
+
+        public static bool operator!=(Coordinate first, Coordinate second)
+        {
+            return !(first == second);
         }
 
         public Double Distance(Coordinate other)
