@@ -8,25 +8,13 @@ namespace CSharpClient
     class Entity
     {
         protected Boolean m_initialized;
-        public Boolean Initialized
-        {
-            get { return m_initialized; }
-            set { m_initialized = value; }
-        }
+        public Boolean Initialized { get { return m_initialized; } set { m_initialized = value; } }
 
         protected UInt32 m_id;
-        public UInt32 Id
-        {
-            get { return m_id; }
-            set { m_id = value; }
-        }
+        public UInt32 Id { get { return m_id; } set { m_id = value; } }
 
         protected Coordinate m_location;
-        public Coordinate Location
-        {
-            get { return m_location; }
-            set { m_location = value; }
-        }
+        public Coordinate Location { get { return m_location; } set { m_location = value; } }
 
         public Entity()
         {

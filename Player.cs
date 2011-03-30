@@ -8,57 +8,25 @@ namespace CSharpClient
     class Player : Entity
     {
         protected String m_name;
-        public String Name
-        {
-            get { return m_name; }
-            set { m_name = value; }
-        }
+        public String Name { get { return m_name; } set { m_name = value; } }
 
         protected Boolean m_hasMercenary;
-        public Boolean HasMecenary
-        {
-            get { return m_hasMercenary; }
-            set { m_hasMercenary = value; }
-        }
+        public Boolean HasMecenary { get { return m_hasMercenary; }  set { m_hasMercenary = value; } }
 
         protected Boolean m_directoryKnown;
-        public Boolean DirectoryKnown
-        {
-            get { return m_directoryKnown; }
-            set { m_directoryKnown = value; }
-        }
+        public Boolean DirectoryKnown { get { return m_directoryKnown; } set { m_directoryKnown = value; } }
 
         protected UInt32 m_mercenaryId;
-        public UInt32 MercenaryId
-        {
-            get { return m_mercenaryId; }
-            set 
-            {
-                m_hasMercenary = true;
-                m_mercenaryId = value;
-            }
-        }
+        public UInt32 MercenaryId { get { return m_mercenaryId; } set  { m_hasMercenary = true; m_mercenaryId = value; } }
 
         protected GameData.CharacterClassType m_class;
-        public GameData.CharacterClassType Class
-        {
-            get { return m_class; }
-            set { m_class = value; }
-        }
+        public GameData.CharacterClassType Class {get { return m_class; } set { m_class = value; } }
 
         protected UInt32 m_level;
-        public UInt32 Level
-        {
-            get { return m_level; }
-            set { m_level = value; }
-        }
+        public UInt32 Level { get { return m_level; } set { m_level = value; } }
 
         protected UInt32 m_portalId;
-        public UInt32 PortalId
-        {
-            get { return m_portalId; }
-            set { m_portalId = value; }
-        }
+        public UInt32 PortalId { get { return m_portalId; } set { m_portalId = value; } }
 
         public Player()
         {

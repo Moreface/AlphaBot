@@ -8,18 +8,10 @@ namespace CSharpClient
     class Coordinate
     {
         protected Int32 m_x;
-        public Int32 X
-        {
-            get { return m_x; }
-            set { m_x = value; }
-        }
+        public Int32 X { get { return m_x; } set { m_x = value; } }
 
         protected Int32 m_y;
-        public Int32 Y
-        {
-            get { return m_y; }
-            set { m_y = value; }
-        }
+        public Int32 Y { get { return m_y; } set { m_y = value; }  }
 
         public Coordinate()
         {
