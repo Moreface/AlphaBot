@@ -105,12 +105,12 @@ namespace CSharpClient
             set { m_superUniqueId = value; }
         }
 
-        NpcEntity()
+        public NpcEntity()
         {
 
         }
 
-        NpcEntity(UInt32 id, UInt32 type, UInt32 life, Int32 x, Int32 y) :
+        public NpcEntity(UInt32 id, UInt32 type, UInt32 life, Int32 x, Int32 y) :
             base(id,x,y)
         {
             m_type = type;

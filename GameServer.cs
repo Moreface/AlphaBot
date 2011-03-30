@@ -135,6 +135,28 @@ namespace CSharpClient
 
         protected void NpcAssignment(byte type, List<byte> data)
         {
+            byte[] packet = data.ToArray();
+            
+            try
+            {
+                // 1 reader.read(8);
+		        UInt32 id = BitConverter.ToUInt32(packet,1);// 5
+		        UInt16  npctype = BitConverter.ToUInt16(packet,5); // 7
+		        UInt16 x = BitConverter.ToUInt16(packet,7); //9
+		        UInt16  y = BitConverter.ToUInt16(packet,9); //11
+		        byte  life = packet[11];
+                byte size = packet[12]; //13
+                NpcEntity output = new NpcEntity(id, npctype, life, x, y);
+                
+
+                BitArray ba = new BitArray(data.GetRange(12, data.Count - 12).ToArray());
+                int pointer = 0;
+                               
+            }
+            catch
+            {
+
+            }
         }
 
         protected void ItemAction(byte type, List<byte> data)
