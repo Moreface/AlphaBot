@@ -118,11 +118,160 @@ namespace CSharpClient
                 case 0x5b: return PlayerJoins;
                 case 0x5c: return PlayerLeaves;
                 case 0x59: return InitializePlayer;
+                case 0x67: return NpcMovement;
+                case 0x68: return NpcMoveEntity;
+                case 0x69: return NpcStateUpdate;
+                case 0x6d: return NpcStoppedMoving;
+                case 0x81: return MercUpdate;
+                case 0x82: return PortalUpdate;
+                case 0x8f: return Pong;
+                case 0x95: return LifeManaPacket;
+                case 0x97: return WeaponSetSwitched;
+                case 0x9c: case 0x9d: return ItemAction;
+                case 0xac: return NpcAssignment;
                 default:   return DefaultHandler;
             }
         }
-        protected void Temp(byte type, List<byte> data)
+
+        protected void NpcAssignment(byte type, List<byte> data)
         {
+        }
+
+        protected void ItemAction(byte type, List<byte> data)
+        {
+        }
+
+        protected void WeaponSetSwitched(byte type, List<byte> data)
+        {
+            if (m_owner.BotGameData.WeaponSet == 0)
+                m_owner.BotGameData.WeaponSet = 1;
+            else
+                m_owner.BotGameData.WeaponSet = 0;
+        }
+
+        protected void LifeManaPacket(byte type, List<byte> data)
+        {
+            byte[] packet = data.ToArray();
+            if (BitConverter.ToUInt16(packet, 6) == 0x0000)
+                return;
+
+            UInt32 plife = (uint)BitConverter.ToUInt16(packet, 1) & 0x7FFF;
+            if (m_owner.BotGameData.CurrentLife == 0)
+                m_owner.BotGameData.CurrentLife = plife;
+
+            if (plife < m_owner.BotGameData.CurrentLife && plife > 0)
+            {
+                UInt32 damage = m_owner.BotGameData.CurrentLife - plife;
+                Console.WriteLine("{0}: [D2GS] {1} damage was dealt to {2} ({3} left)", m_owner.Account, damage, m_owner.Character, plife);
+                if (plife <= m_owner.ChickenLife)
+                {
+                    Console.WriteLine("{0}: [D2GS] Chickening with {1} left!", m_owner.Account, plife);
+                    m_owner.LeaveGame();
+                }
+                else if (plife <= m_owner.PotLife)
+                {
+                    Console.WriteLine("{0}: [D2GS] Attempting to use potion with {1} life left.", m_owner.Account, plife);
+                    m_owner.UsePotion();
+                }
+            }
+
+            m_owner.BotGameData.CurrentLife = plife;
+        }
+
+        protected void Pong(byte type, List<byte> data)
+        {
+            m_owner.BotGameData.LastTimestamp = System.Environment.TickCount;
+        }
+
+        protected void PortalUpdate(byte type, List<byte> data)
+        {
+            byte[] packet = data.ToArray(); 
+            int offset = 5;
+            String name = BitConverter.ToString(packet, offset, 15);
+            if (name.Substring(0, 8) == m_owner.BotGameData.Me.Name.Substring(0, 8))
+            {
+                Console.WriteLine("{0}: [D2GS] Received new portal id", m_owner.Account);
+                m_owner.BotGameData.Me.PortalId = BitConverter.ToUInt32(packet, 21);
+            }
+        }
+
+
+        protected void MercUpdate(byte type, List<byte> data)
+        {
+            byte[] packet = data.ToArray();
+            UInt32 id = BitConverter.ToUInt32(packet, 4);
+            UInt32 mercId = BitConverter.ToUInt32(packet, 8);
+            Player currentPlayer = m_owner.BotGameData.GetPlayer(id);
+            currentPlayer.HasMecenary = true;
+            currentPlayer.MercenaryId = mercId;
+            if (id == m_owner.BotGameData.Me.Id)
+                m_owner.BotGameData.HasMerc = true;
+        }
+
+        protected void NpcStoppedMoving(byte type, List<byte> data)
+        {
+            byte[] packet = data.ToArray();
+            UInt32 id = BitConverter.ToUInt32(packet, 1);
+            UInt16 x = BitConverter.ToUInt16(packet,5);
+            UInt16 y = BitConverter.ToUInt16(packet, 7);
+            byte life = packet[9];
+
+            m_owner.BotGameData.Npcs[id].Moving = false;
+            m_owner.BotGameData.Npcs[id].Location = new Coordinate(x, y);
+            m_owner.BotGameData.Npcs[id].Life = life;
+        }
+
+        protected void NpcStateUpdate(byte type, List<byte> data)
+        {
+            byte[] packet = data.ToArray();
+            UInt32 id = BitConverter.ToUInt32(packet, 1);
+            byte state = packet[5];
+            if (state == 0x09 || state == 0x08)
+                m_owner.BotGameData.Npcs[id].Life = 0;
+            else
+                m_owner.BotGameData.Npcs[id].Life = packet[10];
+
+            m_owner.BotGameData.Npcs[id].Location.X = BitConverter.ToUInt16(packet,6);
+            m_owner.BotGameData.Npcs[id].Location.Y = BitConverter.ToUInt16(packet, 8);
+        }
+
+        protected void NpcMoveEntity(byte type, List<byte> data)
+        {
+            byte[] packet = data.ToArray();
+            UInt32 id = BitConverter.ToUInt32(packet, 1);
+            byte movementType = packet[5];
+            Int32 x = BitConverter.ToUInt16(packet, 6);
+            Int32 y = BitConverter.ToUInt16(packet, 8);
+            bool running;
+            if (movementType == 0x18)
+                running = true;
+            else if (movementType == 0x00)
+                running = false;
+            else
+                return;
+            m_owner.BotGameData.Npcs[id].Moving = true;
+            m_owner.BotGameData.Npcs[id].Running = running;
+            m_owner.BotGameData.Npcs[id].TargetLocation = new Coordinate(x, y);
+        }
+
+
+        protected void NpcMovement(byte type, List<byte> data)
+        {
+            byte[] packet = data.ToArray();
+            UInt32 id = BitConverter.ToUInt32(packet, 1);
+            byte movementType = packet[5];
+            Int32 x = BitConverter.ToUInt16(packet, 6);
+            Int32 y = BitConverter.ToUInt16(packet, 8);
+            bool running;
+            if (movementType == 0x17)
+                running = true;
+            else if (movementType == 0x01)
+                running = false;
+            else
+                return;
+            m_owner.BotGameData.Npcs[id].Moving = true;
+            m_owner.BotGameData.Npcs[id].Running = running;
+            m_owner.BotGameData.Npcs[id].TargetLocation = new Coordinate(x,y);
         }
 
         protected void InitializePlayer(byte type, List<byte> data)
