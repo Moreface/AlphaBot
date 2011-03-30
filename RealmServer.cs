@@ -152,7 +152,7 @@ namespace CSharpClient
 			}
             if (result == 0) {
 				if (ClientlessBot.debugging) Console.WriteLine("{0}: [MCP] Joining the game we just created",m_owner.Account);
-				JoinGame();
+				m_owner.JoinGame();
 			}
         }
 
@@ -376,56 +376,6 @@ namespace CSharpClient
         protected void VoidRequest(byte type, List<byte> data)
         {
             Console.WriteLine("{0}: [MCP] Unknown Packet Received... Ignoring packet type: {1:X} ...", m_owner.Account,type);
-        }
-
-        public void CreateGameThreadFunction()
-        {
-            while (true) {
-
-                //Replace this with mutex  or semaphore
-		        while (m_owner.Status != ClientlessBot.ClientStatus.STATUS_NOT_IN_GAME)
-			        System.Threading.Thread.Sleep(1000);
-
-		        System.Threading.Thread.Sleep(30000);
-		        if (m_owner.FirstGame)
-			        System.Threading.Thread.Sleep(30000);
-                if(m_owner.Status == ClientlessBot.ClientStatus.STATUS_NOT_IN_GAME) 
-                {
-       		        MakeGame();    
-                }
-                System.Threading.Thread.Sleep(5000);
-	        }
-        }
-
-        protected void JoinGame()
-        {
-            Write(BuildPacket(0x04,BitConverter.GetBytes(m_owner.GameRequestId),System.Text.Encoding.ASCII.GetBytes(m_owner.GameName), zero, System.Text.Encoding.ASCII.GetBytes(m_owner.GamePassword),zero));
-            m_owner.GameRequestId++;
-        }
-        protected void MakeGame()
-        {
-            if (m_owner.Password.Length == 0)
-	            m_owner.Password = "xa1";
-
-            m_owner.GameName = Utils.RandomString(10);
-            if (m_owner.FailedGame) {
-	            Console.WriteLine("{0}: [BNCS] Last game failed, sleeping.", m_owner.Account);
-	            //debug_log.write("[" + nil::timestamp() + "] Last game failed, sleeping.\n");
-	            System.Threading.Thread.Sleep(30000);
-            }
-
-            // We assume the game fails every game, until it proves otherwise at end of botthread.
-            m_owner.FailedGame = true;
-
-            Console.WriteLine("{0}: [MCP] Creating game \"{1}\" with password \"{2}\"",m_owner.Account,m_owner.GameName,m_owner.GamePassword);
-            //debug_log.write("[" + nil::timestamp() + "] Creating game \"" + game_name + "\" with password \"" + game_password + "\"\n");
-                
-            byte[] temp = {0x01,0xff,0x08 };
-            byte[] packet = BuildPacket(0x03, BitConverter.GetBytes((UInt16)m_owner.GameRequestId), BitConverter.GetBytes(Utils.GetDifficulty(m_owner.Difficulty)), temp, System.Text.Encoding.ASCII.GetBytes(m_owner.GameName), zero,
-                            System.Text.Encoding.ASCII.GetBytes(m_owner.GamePassword), zero, zero);
-                
-            Write(packet);
-            m_owner.GameRequestId++;
         }
 
         public override void ThreadFunction()
