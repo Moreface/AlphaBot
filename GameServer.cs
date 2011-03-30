@@ -96,7 +96,7 @@ namespace CSharpClient
 
         protected void DefaultHandler(byte type, List<byte> data)
         {
-            Console.WriteLine("{0}: [D2GS] No known handler for this packet", m_owner.Account);
+            //Console.WriteLine("{0}: [D2GS] No known handler for this packet", m_owner.Account);
         }
 
         protected override PacketHandler DispatchPacket(byte type)
@@ -107,13 +107,138 @@ namespace CSharpClient
                 case 0x01: return GameFlagsPing;
                 case 0x02: return StartPingThread;
                 case 0x03: return LoadActData;
+                case 0x0c: return NpcUpdate;
+                case 0x0f: return PlayerUpdate;
+                case 0x15: return PlayerReassign;
+                case 0x1a: case 0x1b: case 0x1c: return ProcessExperience;
+                case 0x1d: return SetPlayerLevel;
+                case 0x21: case 0x22: return ItemSkillBonus;
+                case 0x26: return ChatMessage;
+                case 0x27: return NpcInteraction;
+                case 0x5b: return PlayerJoins;
+                case 0x5c: return PlayerLeaves;
+                case 0x59: return InitializePlayer;
                 default:   return DefaultHandler;
             }
+        }
+        protected void Temp(byte type, List<byte> data)
+        {
+        }
+
+        protected void InitializePlayer(byte type, List<byte> data)
+        {
+            if (!m_owner.BotGameData.Me.Initialized)
+            {
+                UInt32 id = BitConverter.ToUInt32(data.ToArray(), 1);
+                GameData.CharacterClassType charClass = (GameData.CharacterClassType)data[5];
+                UInt32 x = BitConverter.ToUInt16(data.ToArray(),22);
+                UInt32 y = BitConverter.ToUInt16(data.ToArray(), 24);
+                Player newPlayer = new Player(m_owner.Character, id, charClass, m_owner.CharacterLevel,(int)x,(int)y);
+                m_owner.BotGameData.Me = newPlayer;
+            }
+        }
+
+        protected void PlayerJoins(byte type, List<byte> data)
+        {
+            UInt32 id = BitConverter.ToUInt32(data.ToArray(), 3);
+            if (id != m_owner.BotGameData.Me.Id)
+            {
+                String name = BitConverter.ToString(data.ToArray(), 8, 15);
+                GameData.CharacterClassType charClass = (GameData.CharacterClassType)data[7];
+                UInt32 level = BitConverter.ToUInt16(data.ToArray(), 24);
+                Player newPlayer = new Player(name, id, charClass, level);
+                m_owner.BotGameData.Players.Add(id, newPlayer);
+            }
+        }
+
+        protected void PlayerLeaves(byte type, List<byte> data)
+        {
+            UInt32 id = BitConverter.ToUInt32(data.ToArray(), 1);
+            m_owner.BotGameData.Players.Remove(id);
+        }
+        protected void NpcInteraction(byte type, List<byte> data)
+        {
+            if (m_owner.BotGameData.FirstNpcInfoPacket)
+                m_owner.BotGameData.FirstNpcInfoPacket = false;
+            else
+            {
+                Console.WriteLine("{0}: [D2GS] Talking to an NPC.", m_owner.Account);
+                m_owner.BotGameData.TalkedToNpc = true;
+                UInt32 id = BitConverter.ToUInt32(data.ToArray(), 2);
+                Write(BuildPacket(0x2f, one, BitConverter.GetBytes(id)));
+            }
+        }
+
+        protected void ChatMessage(byte type, List<byte> data)
+        {
+        }
+
+        protected void ItemSkillBonus(byte type, List<byte> data)
+        {
+            UInt32 skill,amount;
+            skill = BitConverter.ToUInt16(data.ToArray(), 7);
+            if (type == 0x21)
+                amount = data[10];
+            else
+                amount = data[9];
+
+            Console.WriteLine("Setting Skill: {0} bonus to {1}", skill, amount);
+            m_owner.BotGameData.ItemSkillLevels[(Skills.Type)skill] = amount;
+        }
+
+        protected void SetPlayerLevel(byte type, List<byte> data)
+        {
+            if (data[1] == 0x0c)
+            {
+                m_owner.BotGameData.Me.Level = data[2];
+                Console.WriteLine("Setting Player Level: {0}", data[2]);
+            }
+        }
+
+        protected void ProcessExperience(byte type, List<byte> data)
+        {
+            UInt32 exp = 0;
+            if (type == 0x1a)
+                exp = data[1];
+            else if (type == 0x1b)
+                exp = BitConverter.ToUInt16(data.ToArray(), 1);
+            else if (type == 0x1c)
+                exp = BitConverter.ToUInt32(data.ToArray(), 1);
+            m_owner.BotGameData.Experience += exp;
+        }
+
+        protected void PlayerReassign(byte type, List<byte> data)
+        {
+            UInt32 id = BitConverter.ToUInt32(data.ToArray(), 2);
+            Player current_player = m_owner.BotGameData.GetPlayer(id);
+            current_player.Location = new Coordinate(BitConverter.ToUInt16(data.ToArray(), 6), BitConverter.ToUInt16(data.ToArray(), 8));
+        }
+
+        protected void PlayerUpdate(byte type, List<byte> data)
+        {
+            UInt32 playerId = BitConverter.ToUInt32(data.ToArray(), 2);
+            Player current_player = m_owner.BotGameData.GetPlayer(playerId);
+            current_player.Location = new Coordinate(BitConverter.ToUInt16(data.ToArray(),7),BitConverter.ToUInt16(data.ToArray(),9));
+            current_player.DirectoryKnown = true;
+        }
+
+        protected void NpcUpdate(byte type, List<byte> data)
+        {
+            UInt32 id = BitConverter.ToUInt32(data.ToArray(), 2);
+            m_owner.BotGameData.Npcs[id].Life = data[8];
         }
 
         protected void LoadActData(byte type, List<byte> data)
         {
             Console.WriteLine("{0}: [D2GS] Loading Act Data", m_owner.Account);
+            m_owner.BotGameData.CurrentAct = (GameData.ActType)data[1];
+            m_owner.BotGameData.MapId = BitConverter.ToInt32(data.ToArray(), 2);
+            m_owner.BotGameData.AreaId = BitConverter.ToInt32(data.ToArray(), 6);
+            if (!m_owner.BotGameData.FullyEnteredGame)
+            {
+                m_owner.BotGameData.FullyEnteredGame = true;
+                Console.WriteLine("{0}: [D2GS] Fully Entered Game.", m_owner.Account);
+            }
         }
 
         protected void StartPingThread(byte type, List<byte> data)
@@ -149,6 +274,7 @@ namespace CSharpClient
         {
 
             //Initialize the game's data
+            m_owner.InitializeGameData();
 
             Console.Write("{0}: [D2GS] Connecting to Game Server {1}:{2} .......",m_owner.Account,m_owner.GsIp,s_gsPort);
             try
