@@ -475,7 +475,7 @@ namespace CSharpClient
                 case 0x211: Console.WriteLine("{0}: [BNCS] Expansion CD key is being used by {1}", m_owner.Account, info);
                     m_owner.Status = ClientlessBot.ClientStatus.STATUS_EXP_KEY_IN_USE;
                     break;
-                case 0x202: Console.WriteLine("{0}: [BNCS] This CD key has been banned", m_owner.Account, info);
+                case 0x202: Console.WriteLine("{0}: [BNCS] This CD key has been banned", m_owner.Account);
                     m_owner.Status = ClientlessBot.ClientStatus.STATUS_BANNED_CD_KEY;
                     break;
                 case 0x212: Console.WriteLine("{0}: [BNCS] This Expansion CD key has been banned", m_owner.Account);
