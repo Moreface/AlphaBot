@@ -110,8 +110,8 @@ namespace CSharpClient
         private Int32 m_malahId;
         public Int32 MalahId { get { return m_malahId; } set { m_malahId = value; } }
 
-        private Int32 m_currentLife;
-        public Int32 CurrentLife { get { return m_currentLife; } set { m_currentLife = value; } }
+        private UInt32 m_currentLife;
+        public UInt32 CurrentLife { get { return m_currentLife; } set { m_currentLife = value; } }
 
         protected Boolean m_firstNpcInfoPacket;
         public Boolean FirstNpcInfoPacket { get { return m_firstNpcInfoPacket; } set { m_firstNpcInfoPacket = value; } }
@@ -124,6 +124,9 @@ namespace CSharpClient
 
         protected Boolean m_hasMerc;
         public Boolean HasMerc { get { return m_hasMerc; } set { m_hasMerc = value; } }
+
+        private Int32 m_lastTimestamp;
+        public Int32 LastTimestamp { get { return m_lastTimestamp; } set { m_lastTimestamp = value; } }
 
         /*
          * 
