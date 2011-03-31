@@ -5,6 +5,81 @@ using System.Text;
 
 namespace CSharpClient
 {
+    class ItemEntry
+    {
+        public String Name;
+        public String Type;
+        ItemType.ItemClassificationType Classification;
+        UInt32 Width, Height;
+        Boolean Stackable, Usable, Throwable;
+
+        public ItemEntry()
+        {
+
+        }
+        public ItemEntry(String name, String type, ItemType.ItemClassificationType classification, UInt32 width, UInt32 height, Boolean stackable, Boolean usable, Boolean throwable)
+        {
+            Name = name;
+            Type = type;
+            Classification = classification;
+            Width = width;
+            Height =height;
+            Stackable = stackable;
+            Usable = usable;
+            Throwable = throwable;
+        }
+
+        Boolean IsArmor()
+        {
+            switch (Classification)
+            {
+                case ItemType.ItemClassificationType.helm:
+                case ItemType.ItemClassificationType.armor:
+                case ItemType.ItemClassificationType.shield:
+                case ItemType.ItemClassificationType.gloves:
+                case ItemType.ItemClassificationType.boots:
+                case ItemType.ItemClassificationType.belt:
+                case ItemType.ItemClassificationType.druid_pelt:
+                case ItemType.ItemClassificationType.barbarian_helm:
+                case ItemType.ItemClassificationType.paladin_shield:
+                case ItemType.ItemClassificationType.necromancer_shrunken_head:
+                case ItemType.ItemClassificationType.circlet:
+                    return true;
+            }
+            return false;
+        }
+        Boolean IsWeapon()
+        {
+            switch (Classification)
+            {           
+                case ItemType.ItemClassificationType.amazon_bow:
+                case ItemType.ItemClassificationType.amazon_javelin:
+                case ItemType.ItemClassificationType.amazon_spear:
+                case ItemType.ItemClassificationType.assassin_katar:
+                case ItemType.ItemClassificationType.axe:
+                case ItemType.ItemClassificationType.bow:
+                case ItemType.ItemClassificationType.club:
+                case ItemType.ItemClassificationType.crossbow:
+                case ItemType.ItemClassificationType.dagger:
+                case ItemType.ItemClassificationType.hammer:
+                case ItemType.ItemClassificationType.javelin:
+                case ItemType.ItemClassificationType.mace:
+                case ItemType.ItemClassificationType.polearm:
+                case ItemType.ItemClassificationType.scepter:
+                case ItemType.ItemClassificationType.sorceress_orb:
+                case ItemType.ItemClassificationType.spear:
+                case ItemType.ItemClassificationType.sword:
+                case ItemType.ItemClassificationType.staff:
+                case ItemType.ItemClassificationType.throwing_axe:
+                case ItemType.ItemClassificationType.throwing_knife:
+                case ItemType.ItemClassificationType.throwing_potion:
+                case ItemType.ItemClassificationType.wand:
+                    return true;
+            }
+            return false;
+        }
+    }
+  
     class ItemType
     {
         public String packet;
@@ -139,7 +214,7 @@ namespace CSharpClient
             lod110 = 101
         };
 
-        public enum item_class_type
+        public enum ItemClassType
         {
             not_applicable,
             normal,
@@ -250,7 +325,7 @@ namespace CSharpClient
             defense_durability = 7
         };
 
-        enum item_classification_type
+        public enum ItemClassificationType
         {
             amazon_bow,
             amazon_javelin,
