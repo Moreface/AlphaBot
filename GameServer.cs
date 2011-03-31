@@ -44,7 +44,7 @@ namespace CSharpClient
 		    1
 	    };
 
-        Thread m_pingThread;
+        public Thread m_pingThread;
 
         public override byte[] BuildPacket(byte command, params IEnumerable<byte>[] args)
         {
@@ -133,8 +133,344 @@ namespace CSharpClient
             }
         }
 
+        protected ItemType ParseItem(List<byte> data)
+        {
+            ItemType item = new ItemType();
+            item.packet = data.ToArray();
+
+            try
+            {
+                BitReader reader = new BitReader(item.packet);
+                byte packet = (byte)reader.Read(8);
+                item.action = (uint)reader.Read(8);
+                item.category = (uint)reader.Read(8);
+                byte validSize = (byte)reader.Read(8);
+                item.id = (uint)reader.Read(32);
+
+                if (packet == 0x9d)
+                    reader.Read(40);
+
+                item.equipped = reader.ReadBit();
+                reader.ReadBit();
+                reader.ReadBit();
+                item.in_socket = reader.ReadBit();
+		        item.identified = reader.ReadBit();
+		        reader.ReadBit();
+		        item.switched_in = reader.ReadBit();
+		        item.switched_out = reader.ReadBit();
+
+		        item.broken = reader.ReadBit();
+		        reader.ReadBit();
+		        item.potion = reader.ReadBit();
+		        item.has_sockets = reader.ReadBit();
+		        reader.ReadBit();
+		        item.in_store = reader.ReadBit();
+		        item.not_in_a_socket = reader.ReadBit();
+		        reader.ReadBit();
+
+		        item.ear = reader.ReadBit();
+		        item.start_item = reader.ReadBit();
+		        reader.ReadBit();
+		        reader.ReadBit();
+		        reader.ReadBit();
+		        item.simple_item = reader.ReadBit();
+		        item.ethereal = reader.ReadBit();
+		        reader.ReadBit();
+
+		        item.personalised = reader.ReadBit();
+		        item.gambling = reader.ReadBit();
+		        item.rune_word = reader.ReadBit();
+		        reader.Read(5);
+
+		        item.version = (ItemType.ItemVersionType)(reader.Read(8));
+
+		        reader.Read(2);
+		        byte destination = (byte)reader.Read(3);
+
+        		item.ground = (destination == 0x03);
+
+        		if(item.ground)
+		        {
+			        item.x = (UInt16)reader.Read(16);
+			        item.y = (UInt16)reader.Read(16);
+		        }
+		        else
+		        {
+			        item.directory = (byte)reader.Read(4);
+			        item.x = (byte)reader.Read(4);
+			        item.y = (byte)reader.Read(3);
+			        item.container = (ItemType.ItemContainerType)(reader.Read(4));
+		        }
+
+	        	item.unspecified_directory = false;
+
+		        if(item.action == (uint)ItemType.item_action_type.add_to_shop || item.action == (uint)ItemType.item_action_type.remove_from_shop)
+		        {
+			        long container = (long)(item.container);
+			        container |= 0x80;
+			        if((container & 1) != 0)
+			        {
+				        container--; //remove first bit
+				        item.y += 8;
+			        }
+			        item.container = (ItemType.ItemContainerType)(container);
+		        }
+		        else if(item.container == ItemType.ItemContainerType.unspecified)
+		        {
+		        	if(item.directory == (uint)ItemType.equipment_directory_type.not_applicable)
+			        {
+				        if(item.in_socket)
+					    //y is ignored for this container type, x tells you the index
+					        item.container = ItemType.ItemContainerType.item;
+				        else if(item.action == (uint)ItemType.item_action_type.put_in_belt || item.action == (uint)ItemType.item_action_type.remove_from_belt)
+				        {
+					        item.container = ItemType.ItemContainerType.belt;
+					        item.y = item.x / 4;
+					        item.x %= 4;
+				        }
+			        }
+			    else
+				    item.unspecified_directory = true;
+		        }
+
+		        if(item.ear)
+		        {
+			        item.ear_character_class =  (GameData.CharacterClassType)(reader.Read(3));
+			        item.ear_level = (byte)reader.Read(7);
+			        item.ear_name = "Fuck Off";
+                    reader.Read(16*7);
+			        return item;
+		        }
+
+		        byte[] code_bytes = new byte[4];
+		        for(int i = 0; i < code_bytes.Length; i++)
+			        code_bytes[i] = (byte)(reader.Read(8));
+		        code_bytes[3] = 0;
+
+		        item.type = System.Text.Encoding.ASCII.GetString(code_bytes);
+
+		        ItemEntry entry;
+		        if(!m_owner.m_dm.m_itemData.Get(item.type, out entry))
+		        {
+			        Console.WriteLine( "Failed to look up item in item data table");
+			        return item;
+		        }
+
+		        item.name = entry.Name;
+		        item.width = (int)entry.Width;
+		        item.height = (int)entry.Height;
+
+		        item.is_gold = (item.type == "gld");
+
+		        if(item.is_gold)
+		        {
+			        bool big_pile = reader.ReadBit();
+			        if(big_pile)
+				        item.amount = (uint)reader.Read(32);
+			        else
+				        item.amount = (uint)reader.Read(12);
+
+			        return item;
+		        }
+
+		        item.used_sockets = (byte)reader.Read(3);
+
+		        item.quality = ItemType.ItemQualityType.normal;
+
+		        if(item.simple_item || item.gambling)
+			        return item;
+
+		        item.level = (byte)reader.Read(7);
+
+		        item.quality = (ItemType.ItemQualityType)(reader.Read(4));
+
+
+		        // EVERYTHING AFTER THIS NEEDS FIXING!
+		        // Item mods will NOT be read/parsed in current version.
+		        // Item code and quality is enough for a hacky beta pickit.
+		        //return item;
+
+        		item.has_graphic = reader.ReadBit();;
+        		if(item.has_graphic)
+			        item.graphic = (byte)reader.Read(3);
+
+		        item.has_colour = reader.ReadBit();
+		        if(item.has_colour)
+			        item.colour = (UInt16)reader.Read(11);
+
+		        if(item.identified)
+		        {
+			        switch(item.quality)
+		        	{
+			        case ItemType.ItemQualityType.inferior:
+			        	item.prefix = (byte) reader.Read(3);
+			        	break;
+			        case ItemType.ItemQualityType.superior:
+				        item.superiority = (ItemType.SuperiorItemClassType)(reader.Read(3));
+				        break;
+			        case ItemType.ItemQualityType.magical:
+				        item.prefix = (uint)reader.Read(11);
+				        item.suffix = (uint)reader.Read(11);
+				        break;
+
+			        case ItemType.ItemQualityType.crafted:
+			        case ItemType.ItemQualityType.rare:
+				        item.prefix = (uint)reader.Read(8) - 156;
+				        item.suffix = (uint)reader.Read(8) - 1;
+				        if(ClientlessBot.debugging)
+				        {
+                            /*
+					        std::cout << "Rare prefix: " << item.prefix << std::endl;
+					        std::cout << "Rare suffix: " << item.suffix << std::endl;
+					        std::cout << get_char_array_string(data) << std::endl;
+                             */
+			        	}
+				        break;
+
+			        case ItemType.ItemQualityType.set:
+				        item.set_code = (uint)reader.Read(12);
+				        break;
+			        case ItemType.ItemQualityType.unique:
+				        if(item.type != "std") //standard of heroes exception?
+					        item.unique_code = (uint)reader.Read(12);
+				        break;
+			    }
+		    }
+
+		    if(item.quality == ItemType.ItemQualityType.rare || item.quality == ItemType.ItemQualityType.crafted)
+		    {
+			    for(ulong i = 0; i < 3; i++)
+			    {
+				    if(reader.ReadBit())
+			    		item.prefixes.Add((uint)reader.Read(11));
+		    		if(reader.ReadBit())
+	    				item.suffixes.Add((uint)reader.Read(11));
+    			}
+		    }
+
+		    if(item.rune_word)
+		    {
+			    item.runeword_id = (uint)reader.Read(12);
+			    item.runeword_parameter = (byte)reader.Read(4);
+			    //std::cout << "runeword_id: " << item.runeword_id << ", parameter: " << item.runeword_parameter << std::endl;
+    		}
+
+		    if(item.personalised)
+            {
+			    item.personalised_name = "Fuck off";
+                reader.Read(7*16);
+            }
+        
+
+		    item.is_armor = entry.IsArmor();
+		    item.is_weapon = entry.IsWeapon();
+
+		    if(item.is_armor)
+			    item.defense = (uint)reader.Read(11) - 10;
+
+		    /*if(entry.throwable)
+		    {
+			    reader.Read(9);
+			    reader.Read(17);
+		    }
+		    //special case: indestructible phase blade
+		    else */
+		    if(item.type == "7cr")
+    			reader.Read(8);
+		    else if(item.is_armor || item.is_weapon)
+		    {
+			    item.maximum_durability = (byte)reader.Read(8);
+			    item.indestructible = (uint)((item.maximum_durability == 0) ? 1 : 0);
+			    /*
+			    if(!item.indestructible)
+			    {
+				    item.durability = reader.Read(8);
+    				reader.ReadBit();
+			    }
+			    */
+
+			    //D2Hackit always reads it, hmmm. Appears to work.
+
+			    item.durability = (byte)reader.Read(8);
+			    reader.ReadBit();
+		    }
+
+		    if(item.has_sockets)
+    			item.sockets = (byte)reader.Read(4);
+
+		    if(!item.identified)
+    			return item;
+
+		    if(entry.Stackable)
+		    {
+			    if(entry.Usable)
+				    reader.Read(5);
+
+			    item.amount = (uint)reader.Read(9);
+		    }
+            uint set_mods = 0;
+    		if(item.quality == ItemType.ItemQualityType.set)
+	    		set_mods = (byte)reader.Read(5);
+
+    		//reader.debugging = debugging;
+
+        		while(true)
+		        {
+			        //if(debugging)
+			        //	std::cout << "Reading stat ID" << std::endl;
+
+			        uint stat_id = (uint)reader.Read(9);
+
+			        if(stat_id == 0x1ff)
+			        {
+				        //if(debugging)
+				        //	std::cout << "Stat terminator encountered" << std::endl;
+				        break;
+			        }
+
+        			ItemType.ItemPropertyType item_property;
+
+
+			        //process_item_stat(stat_id, reader, item_property);
+			        //item.properties.Add(item_property);
+		        }
+		        //std::cout << pretty_item_stats(item) << std::endl;
+	        }
+	        catch(Exception e)
+        	{
+
+        		Console.WriteLine("Error occured: ");
+		
+	        }
+	        return item;
+            
+        }
+
         protected void ItemAction(byte type, List<byte> data)
         {
+            ItemType item = ParseItem(data);
+
+            if(item.ground)
+                m_owner.BotGameData.Items.Add(item.id, item);
+
+            if (!item.ground && !item.unspecified_directory)
+            {
+                switch (item.container)
+                {
+                    case ItemType.ItemContainerType.inventory:
+                        m_owner.BotGameData.Inventory.Add(item);
+                        break;
+                    case ItemType.ItemContainerType.cube:
+                        m_owner.BotGameData.Cube.Add(item);
+                        break;
+                    case ItemType.ItemContainerType.stash:
+                        m_owner.BotGameData.Stash.Add(item);
+                        break;
+                    case ItemType.ItemContainerType.belt:
+                        m_owner.BotGameData.Belt.Add(item);
+                        break;
+                }
+            }
         }
 
         protected void NpcAssignment(byte type, List<byte> data)
@@ -304,7 +640,6 @@ namespace CSharpClient
             }
         }
 
-
         protected void MercUpdate(byte type, List<byte> data)
         {
             byte[] packet = data.ToArray();
@@ -411,10 +746,11 @@ namespace CSharpClient
         {
             if (!m_owner.BotGameData.Me.Initialized)
             {
-                UInt32 id = BitConverter.ToUInt32(data.ToArray(), 1);
+                byte[] packet = data.ToArray();
+                UInt32 id = BitConverter.ToUInt32(packet, 1);
                 GameData.CharacterClassType charClass = (GameData.CharacterClassType)data[5];
-                UInt32 x = BitConverter.ToUInt16(data.ToArray(),22);
-                UInt32 y = BitConverter.ToUInt16(data.ToArray(), 24);
+                UInt32 x = BitConverter.ToUInt16(packet,22);
+                UInt32 y = BitConverter.ToUInt16(packet, 24);
                 Player newPlayer = new Player(m_owner.Character, id, charClass, m_owner.CharacterLevel,(int)x,(int)y);
                 m_owner.BotGameData.Me = newPlayer;
             }
@@ -422,12 +758,13 @@ namespace CSharpClient
 
         protected void PlayerJoins(byte type, List<byte> data)
         {
-            UInt32 id = BitConverter.ToUInt32(data.ToArray(), 3);
+            byte[] packet = data.ToArray();
+            UInt32 id = BitConverter.ToUInt32(packet, 3);
             if (id != m_owner.BotGameData.Me.Id)
             {
-                String name = BitConverter.ToString(data.ToArray(), 8, 15);
+                String name = BitConverter.ToString(packet, 8, 15);
                 GameData.CharacterClassType charClass = (GameData.CharacterClassType)data[7];
-                UInt32 level = BitConverter.ToUInt16(data.ToArray(), 24);
+                UInt32 level = BitConverter.ToUInt16(packet, 24);
                 Player newPlayer = new Player(name, id, charClass, level);
                 m_owner.BotGameData.Players.Add(id, newPlayer);
             }
@@ -438,6 +775,7 @@ namespace CSharpClient
             UInt32 id = BitConverter.ToUInt32(data.ToArray(), 1);
             m_owner.BotGameData.Players.Remove(id);
         }
+      
         protected void NpcInteraction(byte type, List<byte> data)
         {
             if (m_owner.BotGameData.FirstNpcInfoPacket)
@@ -479,28 +817,31 @@ namespace CSharpClient
 
         protected void ProcessExperience(byte type, List<byte> data)
         {
+            byte[] packet = data.ToArray();
             UInt32 exp = 0;
             if (type == 0x1a)
                 exp = data[1];
             else if (type == 0x1b)
-                exp = BitConverter.ToUInt16(data.ToArray(), 1);
+                exp = BitConverter.ToUInt16(packet, 1);
             else if (type == 0x1c)
-                exp = BitConverter.ToUInt32(data.ToArray(), 1);
+                exp = BitConverter.ToUInt32(packet, 1);
             m_owner.BotGameData.Experience += exp;
         }
 
         protected void PlayerReassign(byte type, List<byte> data)
         {
-            UInt32 id = BitConverter.ToUInt32(data.ToArray(), 2);
+            byte[] packet = data.ToArray();
+            UInt32 id = BitConverter.ToUInt32(packet, 2);
             Player current_player = m_owner.BotGameData.GetPlayer(id);
-            current_player.Location = new Coordinate(BitConverter.ToUInt16(data.ToArray(), 6), BitConverter.ToUInt16(data.ToArray(), 8));
+            current_player.Location = new Coordinate(BitConverter.ToUInt16(packet, 6), BitConverter.ToUInt16(packet, 8));
         }
 
         protected void PlayerUpdate(byte type, List<byte> data)
         {
-            UInt32 playerId = BitConverter.ToUInt32(data.ToArray(), 2);
+            byte[] packet = data.ToArray();
+            UInt32 playerId = BitConverter.ToUInt32(packet, 2);
             Player current_player = m_owner.BotGameData.GetPlayer(playerId);
-            current_player.Location = new Coordinate(BitConverter.ToUInt16(data.ToArray(),7),BitConverter.ToUInt16(data.ToArray(),9));
+            current_player.Location = new Coordinate(BitConverter.ToUInt16(packet,7),BitConverter.ToUInt16(packet,9));
             current_player.DirectoryKnown = true;
         }
 
@@ -533,6 +874,7 @@ namespace CSharpClient
 
             PingStart();
         }
+   
         protected void GameFlagsPing(byte type, List<byte> data)
         {
             //if (ClientlessBot.debugging)
@@ -663,6 +1005,7 @@ namespace CSharpClient
 
                         byte identifier = actualPacket[0];
                         DispatchPacket(identifier)(identifier, actualPacket);
+                        m_owner.ReceivedGameServerPacket(actualPacket);
                     }
                 }
             }
