@@ -235,7 +235,8 @@ namespace CSharpClient
 
 		        if(item.ear)
 		        {
-			        item.ear_character_class =  (GameData.CharacterClassType)(reader.Read(3));
+			        //item.ear_character_class =  (GameData.CharacterClassType)
+                    reader.Read(3);
 			        item.ear_level = (byte)reader.Read(7);
 			        item.ear_name = "Fuck Off";
                     reader.Read(16*7);
