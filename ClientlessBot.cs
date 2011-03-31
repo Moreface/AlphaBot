@@ -151,6 +151,7 @@ namespace CSharpClient
         public BattleNetCS m_bncs;
         public RealmServer m_mcp;
         public GameServer m_gs;
+        public DataManager m_dm;
         protected Thread m_bncsThread;
         protected Thread m_mcpThread;
         protected Thread m_gameCreationThread;
@@ -231,17 +232,17 @@ namespace CSharpClient
          * 
          */
 
-        ClientlessBot()
+        ClientlessBot(DataManager dm)
         {
 
-
+            m_dm = dm;
             m_bncs = new BattleNetCS(this);
             m_mcp = new RealmServer(this);
             m_gs = new GameServer(this);
             m_bncsThread = new Thread(m_bncs.ThreadFunction);
             m_mcpThread = new Thread(m_mcp.ThreadFunction);
             m_gameData = new GameData();
-            m_gameCreationThread = new Thread(m_mcp.CreateGameThreadFunction);
+            m_gameCreationThread = new Thread(CreateGameThreadFunction);
             m_bncsThread.Start();
         }
         ~ClientlessBot()
@@ -292,12 +293,14 @@ namespace CSharpClient
             m_gameData.WeaponSet = 0;
             m_gameData.HasMerc = false;
         }
-
+        
         static void Main(string[] args)
         {
-            ClientlessBot cb = new ClientlessBot();
+            DataManager dm = new DataManager("data\\");
+            ClientlessBot cb = new ClientlessBot(dm);
             Console.ReadKey();
             return;
         }
+        
     }
 }
