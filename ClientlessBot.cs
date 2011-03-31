@@ -101,8 +101,6 @@ namespace CSharpClient
         public String ClassicKey { get { return m_classicKey; } set { m_classicKey = value; } }
         public String ExpansionKey { get { return m_expansionKey; } set { value = m_expansionKey; } }
 
-        // Bosses to kill
-        protected Boolean m_pindle, m_eldritch, m_shenk;
         // Chicken and Potion Values
         protected UInt32 m_chickenLife, m_potLife;
         public UInt32 ChickenLife { get { return m_chickenLife; } set { m_chickenLife = value; } }
@@ -280,6 +278,7 @@ namespace CSharpClient
             m_potLife = potlife;
             m_chickenLife = chickenlife;
             m_keyOwner = "AlphaBot";
+            m_gameExeInformation = "Game.exe 03/09/10 04:10:51 61440";
 
             m_dm = dm;
             m_bncs = new BattleNetCS(this);
@@ -294,6 +293,7 @@ namespace CSharpClient
 
         private ClientlessBot(DataManager dm)
         {
+            m_gameExeInformation = "Game.exe 03/09/10 04:10:51 61440";
             m_dm = dm;
             m_bncs = new BattleNetCS(this);
             m_mcp = new RealmServer(this);
@@ -353,15 +353,5 @@ namespace CSharpClient
             m_gameData.WeaponSet = 0;
             m_gameData.HasMerc = false;
         }
-        
-        static void Main(string[] args)
-        {
-            DataManager dm = new DataManager("data\\");
-            
-            cb.Start();
-            Console.ReadKey();
-            return;
-        }
-        
     }
 }
