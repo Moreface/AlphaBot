@@ -46,8 +46,8 @@ namespace CSharpClient
         protected Boolean m_isLightning;
         public Boolean IsLightning { get { return m_isLightning; } set { m_isLightning = value; } }
 
-        protected UInt32 m_superUniqueId;
-        public UInt32 SuperUniqueId { get { return m_superUniqueId; }  set { m_superUniqueId = value; } }
+        protected Int32 m_superUniqueId;
+        public Int32 SuperUniqueId { get { return m_superUniqueId; }  set { m_superUniqueId = value; } }
 
         public NpcEntity()
         { }
