@@ -9,9 +9,9 @@ namespace CSharpClient
     {
         public String Name;
         public String Type;
-        ItemType.ItemClassificationType Classification;
-        UInt32 Width, Height;
-        Boolean Stackable, Usable, Throwable;
+        public ItemType.ItemClassificationType Classification;
+        public UInt32 Width, Height;
+        public Boolean Stackable, Usable, Throwable;
 
         public ItemEntry()
         {
@@ -29,7 +29,7 @@ namespace CSharpClient
             Throwable = throwable;
         }
 
-        Boolean IsArmor()
+        public Boolean IsArmor()
         {
             switch (Classification)
             {
@@ -48,7 +48,7 @@ namespace CSharpClient
             }
             return false;
         }
-        Boolean IsWeapon()
+        public Boolean IsWeapon()
         {
             switch (Classification)
             {           
@@ -82,7 +82,7 @@ namespace CSharpClient
   
     class ItemType
     {
-        public String packet;
+        public byte[] packet;
 
         public UInt32 action;
 
