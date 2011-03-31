@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<ArrayOfItemType>
+	<ItemType>
+		<Name>Griffons Eye</Name>
+		<Type>ci3</Type>
+		<ItemQuality>unique</ItemQuality>
+		<IsEthereal>false</IsEthereal>
+	</ItemType>
+	<ItemType>
+		<Name>Harlequins Crest</Name>
+		<Type>uap</Type>
+		<ItemQuality>unique</ItemQuality>
+		<IsEthereal>false</IsEthereal>
+	</ItemType>
+	<ItemType>
+		<Name>Nightwings Veil</Name>
+		<Type>uhm</Type>
+		<ItemQuality>unique</ItemQuality>
+		<IsEthereal>false</IsEthereal>
+	</ItemType>
+	<ItemType>
+		<Name>Andarials Visage</Name>
+		<Type>usk</Type>
+		<ItemQuality>unique</ItemQuality>
+		<IsEthereal>false</IsEthereal>
+	</ItemType>
+	<ItemType>
+		<Name>Crown of Ages</Name>
+		<Type>urn</Type>
+		<ItemQuality>unique</ItemQuality>
+		<IsEthereal>false</IsEthereal>
+	</ItemType>
+	<ItemType>
+		<Name>Giant Skull</Name>
+		<Type>uh9</Type>
+		<ItemQuality>unique</ItemQuality>
+		<IsEthereal>true</IsEthereal>
+	</ItemType>
+</ArrayOfItemType>
