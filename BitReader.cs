@@ -22,6 +22,13 @@ namespace CSharpClient
             return m_bits[m_offset++];
         }
 
+        public Int32 Read(int length)
+        {
+            return ReadBitsLittleEndian(length);
+        }
+
+
+
         public Int32 ReadBitsLittleEndian(int length)
         {
             int initialLen = length;
