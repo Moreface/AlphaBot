@@ -133,6 +133,10 @@ namespace CSharpClient
             }
         }
 
+        protected void ItemAction(byte type, List<byte> data)
+        {
+        }
+
         protected void NpcAssignment(byte type, List<byte> data)
         {
             byte[] packet = data.ToArray();
@@ -154,6 +158,89 @@ namespace CSharpClient
 
                 int informationLength = 16;
 
+                String[] entries;
+
+                if (!m_owner.m_dm.m_monsterFields.Get(type, out entries))
+                    Console.WriteLine("Failed to read monstats data for NPC of type {0}", type);
+                if(entries.Length != informationLength)
+                    Console.WriteLine("Invalid monstats entry for NPC of type {0}", type);
+
+                bool lookupName = false;
+
+                if (data.Count > 0x10)
+                {
+                    br.ReadBitsLittleEndian(4);
+                    if (br.ReadBit())
+                    {
+                        for (int i = 0; i < informationLength; i++)
+                        {
+                            int bitCount;
+                            int value = Int32.Parse(entries[i]);
+                            if (value > 2)
+                            {
+                                bitCount = (int)Math.Ceiling(Math.Log((double)value) / Math.Log(2.0));
+                            }
+                            else
+                                bitCount = 1;
+
+                            int bits = br.ReadBitsLittleEndian(bitCount);
+                        }
+                    }
+
+                    output.SuperUnique = false;
+
+                    if (br.ReadBit())
+                    {
+                        output.HasFlags = true;
+                        output.Flag1 = br.ReadBit();
+                        output.Flag2 = br.ReadBit();
+                        output.SuperUnique = br.ReadBit();
+                        output.IsMinion = br.ReadBit();
+                        output.Flag5 = br.ReadBit();
+                    }
+
+                    if (output.SuperUnique)
+                    {
+                        output.SuperUniqueId = br.ReadBitsLittleEndian(16);
+                        String name;
+                        if (!m_owner.m_dm.m_superUniques.Get(output.SuperUniqueId, out name))
+                        {
+                            Console.WriteLine("Failed to lookup super unique monster name for {0}", output.SuperUniqueId);
+                            output.Name = "invalid";
+                        }
+                        else
+                        {
+                            output.Name = name;
+                        }
+                    }
+                    else
+                        lookupName = true;
+
+                    if (data.Count > 17 && lookupName != true && output.Name != "invalid")
+                    {
+                        output.IsLightning = false;
+                        while (true)
+                        {
+                            byte mod = (byte)br.ReadBitsLittleEndian(8);
+                            if (mod == 0)
+                                break;
+                            if (mod == 0x11)
+                                output.IsLightning = true;
+                        }
+                    }
+                }
+                else
+                    lookupName = true;
+
+                if (lookupName)
+                {
+                    String name;
+                    if (!m_owner.m_dm.m_monsterNames.Get((int)output.Type, out name))
+                        Console.WriteLine("Failed to Look up monster name for {0}", output.Type);
+                    else
+                        output.Name = name;
+                }
+
                 m_owner.BotGameData.Npcs.Add(id, output);
             }
             catch
@@ -161,10 +248,6 @@ namespace CSharpClient
 
             }
             
-        }
-
-        protected void ItemAction(byte type, List<byte> data)
-        {
         }
 
         protected void WeaponSetSwitched(byte type, List<byte> data)
