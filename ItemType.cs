@@ -82,6 +82,12 @@ namespace CSharpClient
   
     class ItemType
     {
+        public ItemType()
+        {
+            prefixes = new List<uint>();
+            suffixes = new List<uint>();
+            properties = new List<ItemPropertyType>();
+        }
         public byte[] packet;
 
         public UInt32 action;
@@ -166,6 +172,7 @@ namespace CSharpClient
         public UInt32 sockets;
 
         public List<ItemPropertyType> properties;
+
 
 	    public static bool operator<(ItemType first, ItemType other)
         {
