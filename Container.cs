@@ -11,8 +11,8 @@ namespace CSharpClient
         protected String m_name;
         protected Int32 m_width, m_height;
 
-        List<ItemType> m_items;
-        List<BitArray> m_fields;
+        public List<ItemType> m_items;
+        public List<BitArray> m_fields;
 
         public Container()
         {
