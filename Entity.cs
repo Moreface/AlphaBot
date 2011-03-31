@@ -19,6 +19,7 @@ namespace CSharpClient
         public Entity()
         {
             m_initialized = false;
+            m_location = new Coordinate(0, 0);
         }
 
         public Entity(UInt32 id, Int32 x, Int32 y)
