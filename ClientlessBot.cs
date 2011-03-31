@@ -182,6 +182,16 @@ namespace CSharpClient
             }
         }
 
+        public virtual void ReceivedGameServerPacket(List<byte> data)
+        {
+
+        }
+
+        public virtual void BotThreadFunction()
+        {
+
+        }
+
         public void JoinGame()
         {
             m_mcp.Write(m_mcp.BuildPacket(0x04, BitConverter.GetBytes(GameRequestId), System.Text.Encoding.ASCII.GetBytes(GameName), GenericServerConnection.zero, System.Text.Encoding.ASCII.GetBytes(GamePassword), GenericServerConnection.zero));
@@ -217,12 +227,38 @@ namespace CSharpClient
 
         public void LeaveGame()
         {
+            InGame = false;
+            ConnectedToGs = false;
 
+            Console.WriteLine("{0}: [D2GS] Leaving the game.", Account);
+            m_gs.Write(m_gs.BuildPacket(0x69));
+
+            Thread.Sleep(500);
+            m_gs.m_socket.Close();
+            if(m_gs.m_pingThread.IsAlive)
+                m_gs.m_pingThread.Join();   
+            if(m_gsThread.IsAlive)
+                m_gsThread.Join();
+            Status = ClientStatus.STATUS_NOT_IN_GAME;
         }
 
         public void UsePotion()
         {
+            var a = from n in BotGameData.Belt.m_items 
+                    where n.type == "rv1" select n;
 
+            foreach (var pot in a)
+            {
+                m_gs.Write(m_gs.BuildPacket(0x26, BitConverter.GetBytes(pot.id), GenericServerConnection.nulls, GenericServerConnection.nulls));
+                BotGameData.Belt.m_items.Remove(pot);
+                break;
+            }
+            
+        }
+
+        public void Start()
+        {
+            m_bncsThread.Start();
         }
 
         /*
@@ -231,9 +267,19 @@ namespace CSharpClient
          * 
          * 
          */
-
-        ClientlessBot(DataManager dm)
+        public ClientlessBot(DataManager dm, String bnetServer, String account, String password, String classicKey, String expansionKey, uint potlife, uint chickenlife, String binaryDirectory, GameDifficulty difficulty, String gamepass)
         {
+            m_battleNetServer = bnetServer;
+            m_account = account;
+            m_password = password;
+            m_binaryDirectory = binaryDirectory;
+            m_classicKey = classicKey;
+            m_expansionKey = expansionKey;
+            m_difficulty = difficulty;
+            m_gamePassword = gamepass;
+            m_potLife = potlife;
+            m_chickenLife = chickenlife;
+            m_keyOwner = "AlphaBot";
 
             m_dm = dm;
             m_bncs = new BattleNetCS(this);
@@ -243,11 +289,25 @@ namespace CSharpClient
             m_mcpThread = new Thread(m_mcp.ThreadFunction);
             m_gameData = new GameData();
             m_gameCreationThread = new Thread(CreateGameThreadFunction);
-            m_bncsThread.Start();
         }
+
+
+        private ClientlessBot(DataManager dm)
+        {
+            m_dm = dm;
+            m_bncs = new BattleNetCS(this);
+            m_mcp = new RealmServer(this);
+            m_gs = new GameServer(this);
+            m_bncsThread = new Thread(m_bncs.ThreadFunction);
+            m_mcpThread = new Thread(m_mcp.ThreadFunction);
+            m_gameData = new GameData();
+            m_gameCreationThread = new Thread(CreateGameThreadFunction);
+        }
+
         ~ClientlessBot()
         {
-
+            if(m_gs.m_socket.Connected)
+                LeaveGame();
         }
 
         public void StartMcpThread()
@@ -297,7 +357,8 @@ namespace CSharpClient
         static void Main(string[] args)
         {
             DataManager dm = new DataManager("data\\");
-            ClientlessBot cb = new ClientlessBot(dm);
+            
+            cb.Start();
             Console.ReadKey();
             return;
         }
