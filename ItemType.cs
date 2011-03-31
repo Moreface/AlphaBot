@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Xml.Serialization;
 
 namespace CSharpClient
 {
@@ -80,19 +81,33 @@ namespace CSharpClient
         }
     }
   
-    class ItemType
+    public class ItemType
     {
         public ItemType()
         {
             prefixes = new List<uint>();
             suffixes = new List<uint>();
             properties = new List<ItemPropertyType>();
+            sockets = UInt32.MaxValue;
         }
         public byte[] packet;
 
         public UInt32 action;
 
+        [XmlElement(ElementName= "Name")]
         public String name;
+        [XmlElement(typeof(bool),ElementName= "IsEthereal")]
+        public bool ethereal;
+        [XmlElement(typeof(bool), ElementName = "HasSockets")]
+        public bool has_sockets;
+        [XmlElement(ElementName = "SocketCount")]
+        public UInt32 sockets;
+        [XmlElement(typeof(ItemQualityType),ElementName = "ItemQuality")]
+        public ItemQualityType quality;
+        [XmlElement(ElementName = "Type")]
+        public String type;
+
+
 
         public Int32 width;
         public Int32 height;
@@ -106,13 +121,13 @@ namespace CSharpClient
         public bool switched_out;
         public bool broken;
         public bool potion;
-        public bool has_sockets;
+        
         public bool in_store;
         public bool not_in_a_socket;
         public bool ear;
         public bool start_item;
         public bool simple_item;
-        public bool ethereal;
+       
         public bool personalised;
         public bool gambling;
         public bool rune_word;
@@ -127,17 +142,16 @@ namespace CSharpClient
         public UInt32 directory;
         public ItemContainerType container;
 
-        public GameData.CharacterClassType ear_character_class;
+        //public GameData.CharacterClassType ear_character_class;
         public UInt32 ear_level;
         public String ear_name;
-        public String type;
+        
 
         public bool is_gold;
         public UInt32 amount;
 
         public UInt32 used_sockets;
         public UInt32 level;
-        public ItemQualityType quality;
 
         public bool has_graphic;
         public UInt32 graphic;
@@ -169,7 +183,7 @@ namespace CSharpClient
         public UInt32 durability;
         public UInt32 maximum_durability;
 
-        public UInt32 sockets;
+        
 
         public List<ItemPropertyType> properties;
 
@@ -395,7 +409,7 @@ namespace CSharpClient
             wand
         };
 
-        enum item_stat_type
+        public enum item_stat_type
         {
             strength,
             energy,
