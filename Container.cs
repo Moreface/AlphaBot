@@ -14,24 +14,24 @@ namespace CSharpClient
         public List<ItemType> m_items;
         public List<BitArray> m_fields;
 
-        public Container()
+
+        public Container(String name, Int32 width, Int32 height)
         {
+            m_items = new List<ItemType>();
+            m_name = name;
+            m_width = width;
+            m_height = height;
+
             BitArray fieldLine = new BitArray(m_width, false);
 
             m_fields = new List<BitArray>(m_height);
 
-            for(int i = 0; i < m_height; i++)
+            for (int i = 0; i < m_height; i++)
             {
                 m_fields.Add(new BitArray(fieldLine));
             }
 
-        }
 
-        public Container(String name, Int32 width, Int32 height)
-        {
-            m_name = name;
-            m_width = width;
-            m_height = height;
         }
 
         protected void SetItemFields(ItemType item, bool value)
