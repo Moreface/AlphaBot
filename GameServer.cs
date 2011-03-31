@@ -138,7 +138,7 @@ namespace CSharpClient
             ItemType item = new ItemType();
             item.packet = data.ToArray();
 
-            try
+            //try
             {
                 BitReader reader = new BitReader(item.packet);
                 byte packet = (byte)reader.Read(8);
@@ -247,12 +247,12 @@ namespace CSharpClient
 			        code_bytes[i] = (byte)(reader.Read(8));
 		        code_bytes[3] = 0;
 
-		        item.type = System.Text.Encoding.ASCII.GetString(code_bytes);
+		        item.type = System.Text.Encoding.ASCII.GetString(code_bytes).Substring(0,3);
 
 		        ItemEntry entry;
 		        if(!m_owner.m_dm.m_itemData.Get(item.type, out entry))
 		        {
-			        Console.WriteLine( "Failed to look up item in item data table");
+			        Console.WriteLine("Failed to look up item in item data table");
 			        return item;
 		        }
 
@@ -413,7 +413,7 @@ namespace CSharpClient
 	    		set_mods = (byte)reader.Read(5);
 
     		//reader.debugging = debugging;
-
+            return item;
         		while(true)
 		        {
 			        //if(debugging)
@@ -436,10 +436,10 @@ namespace CSharpClient
 		        }
 		        //std::cout << pretty_item_stats(item) << std::endl;
 	        }
-	        catch(Exception e)
+	        //catch(Exception e)
         	{
 
-        		Console.WriteLine("Error occured: ");
+        	//	Console.WriteLine("Error occured: ");
 		
 	        }
 	        return item;
@@ -802,7 +802,7 @@ namespace CSharpClient
             else
                 amount = data[9];
 
-            Console.WriteLine("Setting Skill: {0} bonus to {1}", skill, amount);
+            //Console.WriteLine("Setting Skill: {0} bonus to {1}", skill, amount);
             m_owner.BotGameData.ItemSkillLevels[(Skills.Type)skill] = amount;
         }
 
@@ -811,7 +811,7 @@ namespace CSharpClient
             if (data[1] == 0x0c)
             {
                 m_owner.BotGameData.Me.Level = data[2];
-                Console.WriteLine("Setting Player Level: {0}", data[2]);
+                //Console.WriteLine("Setting Player Level: {0}", data[2]);
             }
         }
 
