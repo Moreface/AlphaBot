@@ -59,6 +59,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AdvancedCheckRevision.cs" />
+    <Compile Include="AlphaBot.cs" />
     <Compile Include="BattleNetCS.cs" />
     <Compile Include="BitReader.cs" />
     <Compile Include="Bsha1.cs" />
