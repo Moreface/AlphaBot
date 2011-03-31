@@ -21,7 +21,14 @@ namespace CSharpClient
         protected ClientlessBot m_owner;
         public virtual void Write(byte[] packet)
         {
-            m_stream.Write(packet, 0, packet.Length);
+            try
+            {
+                if(m_socket.Connected)
+                    m_stream.Write(packet, 0, packet.Length);
+            }
+            catch
+            {
+            }
         }
 
         public virtual void PrintPacket(byte[] packet)
