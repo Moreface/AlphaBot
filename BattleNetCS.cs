@@ -47,54 +47,57 @@ namespace CSharpClient
 
         protected override bool GetPacket(ref List<byte> bncsBuffer, ref List<byte> data)
         {
-            while (bncsBuffer.Count < 4)
-            {
-                try
+                while (bncsBuffer.Count < 4)
                 {
-                    byte temp = (byte)m_stream.ReadByte();
-                    bncsBuffer.Add(temp);
-                    if (ClientlessBot.debugging)
+                    try
                     {
-                        Console.Write("{0:X2} ", (byte)temp);
+                        byte temp = 0;
+
+                        temp = (byte)m_stream.ReadByte();
+                        bncsBuffer.Add(temp);
+
+                        if (ClientlessBot.debugging)
+                        {
+                            Console.Write("{0:X2} ", (byte)temp);
+                        }
+                    }
+                    catch
+                    {
+                        Console.WriteLine("\n{0}: [BNCS] Disconnected From BNCS", m_owner.Account);
+                        Kill();
+                        return false;
                     }
                 }
-                catch
-                {
-                    Console.WriteLine("\n{0}: [BNCS] Disconnected From BNCS", m_owner.Account);
-                    m_socket.Close();
-                    return false;
-                }
-            }
-            if (ClientlessBot.debugging)
-                Console.WriteLine("");
-            byte[] bytes = new byte[bncsBuffer.Count];
-            bncsBuffer.CopyTo(bytes);
+                if (ClientlessBot.debugging)
+                    Console.WriteLine("");
+                byte[] bytes = new byte[bncsBuffer.Count];
+                bncsBuffer.CopyTo(bytes);
 
-            short packetLength = BitConverter.ToInt16(bytes, 2);
+                short packetLength = BitConverter.ToInt16(bytes, 2);
 
-            while (packetLength > bncsBuffer.Count)
-            {
-                try
+                while (packetLength > bncsBuffer.Count)
                 {
-                    byte temp = (byte)m_stream.ReadByte();
-                    bncsBuffer.Add(temp);
-                    if (ClientlessBot.debugging)
+                    try
                     {
-                        Console.Write("{0:X2} ", (byte)temp);
+                        byte temp = (byte)m_stream.ReadByte();
+                        bncsBuffer.Add(temp);
+                        if (ClientlessBot.debugging)
+                        {
+                            Console.Write("{0:X2} ", (byte)temp);
+                        }
+                    }
+                    catch
+                    {
+                        Console.WriteLine("\n{0}: [BNCS] Disconnected From BNCS", m_owner.Account);
+                        Kill();
+                        return false;
                     }
                 }
-                catch
-                {
-                    Console.WriteLine("\n{0}: [BNCS] Disconnected From BNCS", m_owner.Account);
-                    m_socket.Close();
-                    return false;
-                }
-            }
-            if (ClientlessBot.debugging)
-                Console.WriteLine("");
-            data = new List<byte>(bncsBuffer.GetRange(0, packetLength));
-            bncsBuffer.RemoveRange(0, packetLength);
-            return true;
+                if (ClientlessBot.debugging)
+                    Console.WriteLine("");
+                data = new List<byte>(bncsBuffer.GetRange(0, packetLength));
+                bncsBuffer.RemoveRange(0, packetLength);
+                return true;
         }
 
         public override void Write(byte[] packet)
