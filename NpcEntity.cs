@@ -29,10 +29,10 @@ namespace CSharpClient
         public Boolean HasFlags { get { return m_hasFlags; } set { m_hasFlags = value; } }
 
         protected Boolean m_flag1;
-        public Boolean Flag1 { get { return m_flag1; } set { m_flag1 = value; } }
+        public Boolean Champion { get { return m_flag1; } set { m_flag1 = value; } }
 
         protected Boolean m_flag2;
-        public Boolean Flag2 { get { return m_flag2; } set { m_flag2 = value; } }
+        public Boolean Unique { get { return m_flag2; } set { m_flag2 = value; } }
 
         protected Boolean m_superUnique;
         public Boolean SuperUnique { get { return m_superUnique; } set { m_superUnique = value; } }
@@ -41,7 +41,7 @@ namespace CSharpClient
         public Boolean IsMinion { get { return m_isMinion; } set { m_isMinion = value; } }
 
         protected Boolean m_flag5;
-        public Boolean Flag5 { get { return m_flag5; } set { m_flag5= value; } }
+        public Boolean Ghostly { get { return m_flag5; } set { m_flag5= value; } }
 
         protected Boolean m_isLightning;
         public Boolean IsLightning { get { return m_isLightning; } set { m_isLightning = value; } }
