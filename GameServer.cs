@@ -125,6 +125,7 @@ namespace CSharpClient
                 case 0x81: return MercUpdate;
                 case 0x82: return PortalUpdate;
                 case 0x8f: return Pong;
+                case 0x94: return SkillPacket;
                 case 0x95: return LifeManaPacket;
                 case 0x97: return WeaponSetSwitched;
                 case 0x9c: case 0x9d: return ItemAction;
@@ -133,326 +134,27 @@ namespace CSharpClient
             }
         }
 
-        protected ItemType ParseItem(List<byte> data)
+        protected void SkillPacket(byte type, List<byte> data)
         {
-            ItemType item = new ItemType();
-            item.packet = data.ToArray();
-
-            //try
+            byte[] packet = data.ToArray();
+            byte skillCount = packet[1];
+            int offset = 6;
+            for(int i = 0 ; i < skillCount; i++)
             {
-                BitReader reader = new BitReader(item.packet);
-                byte packet = (byte)reader.Read(8);
-                item.action = (uint)reader.Read(8);
-                item.category = (uint)reader.Read(8);
-                byte validSize = (byte)reader.Read(8);
-                item.id = (uint)reader.Read(32);
-
-                if (packet == 0x9d)
-                    reader.Read(40);
-
-                item.equipped = reader.ReadBit();
-                reader.ReadBit();
-                reader.ReadBit();
-                item.in_socket = reader.ReadBit();
-		        item.identified = reader.ReadBit();
-		        reader.ReadBit();
-		        item.switched_in = reader.ReadBit();
-		        item.switched_out = reader.ReadBit();
-
-		        item.broken = reader.ReadBit();
-		        reader.ReadBit();
-		        item.potion = reader.ReadBit();
-		        item.has_sockets = reader.ReadBit();
-		        reader.ReadBit();
-		        item.in_store = reader.ReadBit();
-		        item.not_in_a_socket = reader.ReadBit();
-		        reader.ReadBit();
-
-		        item.ear = reader.ReadBit();
-		        item.start_item = reader.ReadBit();
-		        reader.ReadBit();
-		        reader.ReadBit();
-		        reader.ReadBit();
-		        item.simple_item = reader.ReadBit();
-		        item.ethereal = reader.ReadBit();
-		        reader.ReadBit();
-
-		        item.personalised = reader.ReadBit();
-		        item.gambling = reader.ReadBit();
-		        item.rune_word = reader.ReadBit();
-		        reader.Read(5);
-
-		        item.version = (ItemType.ItemVersionType)(reader.Read(8));
-
-		        reader.Read(2);
-		        byte destination = (byte)reader.Read(3);
-
-        		item.ground = (destination == 0x03);
-
-        		if(item.ground)
-		        {
-			        item.x = (UInt16)reader.Read(16);
-			        item.y = (UInt16)reader.Read(16);
-		        }
-		        else
-		        {
-			        item.directory = (byte)reader.Read(4);
-			        item.x = (byte)reader.Read(4);
-			        item.y = (byte)reader.Read(3);
-			        item.container = (ItemType.ItemContainerType)(reader.Read(4));
-		        }
-
-	        	item.unspecified_directory = false;
-
-		        if(item.action == (uint)ItemType.item_action_type.add_to_shop || item.action == (uint)ItemType.item_action_type.remove_from_shop)
-		        {
-			        long container = (long)(item.container);
-			        container |= 0x80;
-			        if((container & 1) != 0)
-			        {
-				        container--; //remove first bit
-				        item.y += 8;
-			        }
-			        item.container = (ItemType.ItemContainerType)(container);
-		        }
-		        else if(item.container == ItemType.ItemContainerType.unspecified)
-		        {
-		        	if(item.directory == (uint)ItemType.equipment_directory_type.not_applicable)
-			        {
-				        if(item.in_socket)
-					    //y is ignored for this container type, x tells you the index
-					        item.container = ItemType.ItemContainerType.item;
-				        else if(item.action == (uint)ItemType.item_action_type.put_in_belt || item.action == (uint)ItemType.item_action_type.remove_from_belt)
-				        {
-					        item.container = ItemType.ItemContainerType.belt;
-					        item.y = item.x / 4;
-					        item.x %= 4;
-				        }
-			        }
-			    else
-				    item.unspecified_directory = true;
-		        }
-
-		        if(item.ear)
-		        {
-			        //item.ear_character_class =  (GameData.CharacterClassType)
-                    reader.Read(3);
-			        item.ear_level = (byte)reader.Read(7);
-			        item.ear_name = "Fuck Off";
-                    reader.Read(16*7);
-			        return item;
-		        }
-
-		        byte[] code_bytes = new byte[4];
-		        for(int i = 0; i < code_bytes.Length; i++)
-			        code_bytes[i] = (byte)(reader.Read(8));
-		        code_bytes[3] = 0;
-
-		        item.type = System.Text.Encoding.ASCII.GetString(code_bytes).Substring(0,3);
-
-		        ItemEntry entry;
-		        if(!m_owner.m_dm.m_itemData.Get(item.type, out entry))
-		        {
-			        Console.WriteLine("Failed to look up item in item data table");
-			        return item;
-		        }
-
-		        item.name = entry.Name;
-		        item.width = (int)entry.Width;
-		        item.height = (int)entry.Height;
-
-		        item.is_gold = (item.type == "gld");
-
-		        if(item.is_gold)
-		        {
-			        bool big_pile = reader.ReadBit();
-			        if(big_pile)
-				        item.amount = (uint)reader.Read(32);
-			        else
-				        item.amount = (uint)reader.Read(12);
-
-			        return item;
-		        }
-
-		        item.used_sockets = (byte)reader.Read(3);
-
-		        item.quality = ItemType.ItemQualityType.normal;
-
-		        if(item.simple_item || item.gambling)
-			        return item;
-
-		        item.level = (byte)reader.Read(7);
-
-		        item.quality = (ItemType.ItemQualityType)(reader.Read(4));
-
-
-		        // EVERYTHING AFTER THIS NEEDS FIXING!
-		        // Item mods will NOT be read/parsed in current version.
-		        // Item code and quality is enough for a hacky beta pickit.
-		        //return item;
-
-        		item.has_graphic = reader.ReadBit();;
-        		if(item.has_graphic)
-			        item.graphic = (byte)reader.Read(3);
-
-		        item.has_colour = reader.ReadBit();
-		        if(item.has_colour)
-			        item.colour = (UInt16)reader.Read(11);
-
-		        if(item.identified)
-		        {
-			        switch(item.quality)
-		        	{
-			        case ItemType.ItemQualityType.inferior:
-			        	item.prefix = (byte) reader.Read(3);
-			        	break;
-			        case ItemType.ItemQualityType.superior:
-				        item.superiority = (ItemType.SuperiorItemClassType)(reader.Read(3));
-				        break;
-			        case ItemType.ItemQualityType.magical:
-				        item.prefix = (uint)reader.Read(11);
-				        item.suffix = (uint)reader.Read(11);
-				        break;
-
-			        case ItemType.ItemQualityType.crafted:
-			        case ItemType.ItemQualityType.rare:
-				        item.prefix = (uint)reader.Read(8) - 156;
-				        item.suffix = (uint)reader.Read(8) - 1;
-				        if(ClientlessBot.debugging)
-				        {
-                            /*
-					        std::cout << "Rare prefix: " << item.prefix << std::endl;
-					        std::cout << "Rare suffix: " << item.suffix << std::endl;
-					        std::cout << get_char_array_string(data) << std::endl;
-                             */
-			        	}
-				        break;
-
-			        case ItemType.ItemQualityType.set:
-				        item.set_code = (uint)reader.Read(12);
-				        break;
-			        case ItemType.ItemQualityType.unique:
-				        if(item.type != "std") //standard of heroes exception?
-					        item.unique_code = (uint)reader.Read(12);
-				        break;
-			    }
-		    }
-
-		    if(item.quality == ItemType.ItemQualityType.rare || item.quality == ItemType.ItemQualityType.crafted)
-		    {
-			    for(ulong i = 0; i < 3; i++)
-			    {
-				    if(reader.ReadBit())
-			    		item.prefixes.Add((uint)reader.Read(11));
-		    		if(reader.ReadBit())
-	    				item.suffixes.Add((uint)reader.Read(11));
-    			}
-		    }
-
-		    if(item.rune_word)
-		    {
-			    item.runeword_id = (uint)reader.Read(12);
-			    item.runeword_parameter = (byte)reader.Read(4);
-			    //std::cout << "runeword_id: " << item.runeword_id << ", parameter: " << item.runeword_parameter << std::endl;
-    		}
-
-		    if(item.personalised)
-            {
-			    item.personalised_name = "Fuck off";
-                reader.Read(7*16);
+                UInt16 skill = BitConverter.ToUInt16(packet, offset);
+                byte level = packet[offset+2];
+                m_owner.BotGameData.SkillLevels[(Skills.Type)skill] = level;
+                //Console.WriteLine("Skill: {0}, Level: {1}", (Skills.Type)skill, level);
+                offset += 3;
             }
-        
-
-		    item.is_armor = entry.IsArmor();
-		    item.is_weapon = entry.IsWeapon();
-
-		    if(item.is_armor)
-			    item.defense = (uint)reader.Read(11) - 10;
-
-		    /*if(entry.throwable)
-		    {
-			    reader.Read(9);
-			    reader.Read(17);
-		    }
-		    //special case: indestructible phase blade
-		    else */
-		    if(item.type == "7cr")
-    			reader.Read(8);
-		    else if(item.is_armor || item.is_weapon)
-		    {
-			    item.maximum_durability = (byte)reader.Read(8);
-			    item.indestructible = (uint)((item.maximum_durability == 0) ? 1 : 0);
-			    /*
-			    if(!item.indestructible)
-			    {
-				    item.durability = reader.Read(8);
-    				reader.ReadBit();
-			    }
-			    */
-
-			    //D2Hackit always reads it, hmmm. Appears to work.
-
-			    item.durability = (byte)reader.Read(8);
-			    reader.ReadBit();
-		    }
-
-		    if(item.has_sockets)
-    			item.sockets = (byte)reader.Read(4);
-
-		    if(!item.identified)
-    			return item;
-
-		    if(entry.Stackable)
-		    {
-			    if(entry.Usable)
-				    reader.Read(5);
-
-			    item.amount = (uint)reader.Read(9);
-		    }
-            uint set_mods = 0;
-    		if(item.quality == ItemType.ItemQualityType.set)
-	    		set_mods = (byte)reader.Read(5);
-
-    		//reader.debugging = debugging;
-            return item;
-        		while(true)
-		        {
-			        //if(debugging)
-			        //	std::cout << "Reading stat ID" << std::endl;
-
-			        uint stat_id = (uint)reader.Read(9);
-
-			        if(stat_id == 0x1ff)
-			        {
-				        //if(debugging)
-				        //	std::cout << "Stat terminator encountered" << std::endl;
-				        break;
-			        }
-
-        			ItemType.ItemPropertyType item_property;
-
-
-			        //process_item_stat(stat_id, reader, item_property);
-			        //item.properties.Add(item_property);
-		        }
-		        //std::cout << pretty_item_stats(item) << std::endl;
-	        }
-	        //catch(Exception e)
-        	{
-
-        	//	Console.WriteLine("Error occured: ");
-		
-	        }
-	        return item;
-            
+            m_owner.DetermineCharacterSkillSetup();
         }
 
         protected void ItemAction(byte type, List<byte> data)
         {
             ItemType item = ParseItem(data);
 
-            if(item.ground)
-                m_owner.BotGameData.Items.Add(item.id, item);
+            m_owner.BotGameData.Items.Add(item.id, item);
 
             if (!item.ground && !item.unspecified_directory)
             {
@@ -476,6 +178,7 @@ namespace CSharpClient
 
         protected void NpcAssignment(byte type, List<byte> data)
         {
+            
             byte[] packet = data.ToArray();
             NpcEntity output;
             try
@@ -490,8 +193,9 @@ namespace CSharpClient
                 byte size = (byte)br.ReadBitsLittleEndian(8);
 
                 output = new NpcEntity(id, npctype, life, x, y);
-
-                Console.WriteLine("NPC id: {3}, Type: {0:X}, Life: {1:X}, Size: {2:X}", npctype, life, data.Count, id);
+                
+                if(ClientlessBot.debugging)
+                    Console.WriteLine("NPC id: {3}, Type: {0:X}, Life: {1:X}, Size: {2:X}", npctype, life, data.Count, id);
 
                 int informationLength = 16;
 
@@ -529,11 +233,11 @@ namespace CSharpClient
                     if (br.ReadBit())
                     {
                         output.HasFlags = true;
-                        output.Flag1 = br.ReadBit();
-                        output.Flag2 = br.ReadBit();
+                        output.Champion = br.ReadBit();
+                        output.Unique = br.ReadBit();
                         output.SuperUnique = br.ReadBit();
                         output.IsMinion = br.ReadBit();
-                        output.Flag5 = br.ReadBit();
+                        output.Ghostly = br.ReadBit();
                     }
 
                     if (output.SuperUnique)
@@ -548,6 +252,7 @@ namespace CSharpClient
                         else
                         {
                             output.Name = name;
+                            //Console.WriteLine("NPC: {0}", name);
                         }
                     }
                     else
@@ -576,6 +281,8 @@ namespace CSharpClient
                         Console.WriteLine("Failed to Look up monster name for {0}", output.Type);
                     else
                         output.Name = name;
+
+                    //Console.WriteLine("NPC: {0}", name);
                 }
 
                 m_owner.BotGameData.Npcs.Add(id, output);
@@ -633,8 +340,8 @@ namespace CSharpClient
         {
             byte[] packet = data.ToArray(); 
             int offset = 5;
-            String name = BitConverter.ToString(packet, offset, 15);
-            if (name.Substring(0, 8) == m_owner.BotGameData.Me.Name.Substring(0, 8))
+            String name = System.Text.Encoding.ASCII.GetString(packet, offset, 15);
+            if (name.Substring(0, m_owner.Me.Name.Length) == m_owner.BotGameData.Me.Name)
             {
                 Console.WriteLine("{0}: [D2GS] Received new portal id", m_owner.Account);
                 m_owner.BotGameData.Me.PortalId = BitConverter.ToUInt32(packet, 21);
@@ -897,7 +604,7 @@ namespace CSharpClient
 
         public override void ThreadFunction()
         {
-
+            m_socket = new TcpClient();
             //Initialize the game's data
             m_owner.InitializeGameData();
 
@@ -1112,6 +819,320 @@ namespace CSharpClient
 	        output = initial_offset + name_offset + 1 + message_offset + 1;
 
 	        return true;
+        }
+
+        protected ItemType ParseItem(List<byte> data)
+        {
+            ItemType item = new ItemType();
+            item.packet = data.ToArray();
+
+            //try
+            {
+                BitReader reader = new BitReader(item.packet);
+                byte packet = (byte)reader.Read(8);
+                item.action = (uint)reader.Read(8);
+                item.category = (uint)reader.Read(8);
+                byte validSize = (byte)reader.Read(8);
+                item.id = (uint)reader.Read(32);
+
+                if (packet == 0x9d)
+                    reader.Read(40);
+
+                item.equipped = reader.ReadBit();
+                reader.ReadBit();
+                reader.ReadBit();
+                item.in_socket = reader.ReadBit();
+                item.identified = reader.ReadBit();
+                reader.ReadBit();
+                item.switched_in = reader.ReadBit();
+                item.switched_out = reader.ReadBit();
+
+                item.broken = reader.ReadBit();
+                reader.ReadBit();
+                item.potion = reader.ReadBit();
+                item.has_sockets = reader.ReadBit();
+                reader.ReadBit();
+                item.in_store = reader.ReadBit();
+                item.not_in_a_socket = reader.ReadBit();
+                reader.ReadBit();
+
+                item.ear = reader.ReadBit();
+                item.start_item = reader.ReadBit();
+                reader.ReadBit();
+                reader.ReadBit();
+                reader.ReadBit();
+                item.simple_item = reader.ReadBit();
+                item.ethereal = reader.ReadBit();
+                reader.ReadBit();
+
+                item.personalised = reader.ReadBit();
+                item.gambling = reader.ReadBit();
+                item.rune_word = reader.ReadBit();
+                reader.Read(5);
+
+                item.version = (ItemType.ItemVersionType)(reader.Read(8));
+
+                reader.Read(2);
+                byte destination = (byte)reader.Read(3);
+
+                item.ground = (destination == 0x03);
+
+                if (item.ground)
+                {
+                    item.x = (UInt16)reader.Read(16);
+                    item.y = (UInt16)reader.Read(16);
+                }
+                else
+                {
+                    item.directory = (byte)reader.Read(4);
+                    item.x = (byte)reader.Read(4);
+                    item.y = (byte)reader.Read(3);
+                    item.container = (ItemType.ItemContainerType)(reader.Read(4));
+                }
+
+                item.unspecified_directory = false;
+
+                if (item.action == (uint)ItemType.item_action_type.add_to_shop || item.action == (uint)ItemType.item_action_type.remove_from_shop)
+                {
+                    long container = (long)(item.container);
+                    container |= 0x80;
+                    if ((container & 1) != 0)
+                    {
+                        container--; //remove first bit
+                        item.y += 8;
+                    }
+                    item.container = (ItemType.ItemContainerType)(container);
+                }
+                else if (item.container == ItemType.ItemContainerType.unspecified)
+                {
+                    if (item.directory == (uint)ItemType.equipment_directory_type.not_applicable)
+                    {
+                        if (item.in_socket)
+                            //y is ignored for this container type, x tells you the index
+                            item.container = ItemType.ItemContainerType.item;
+                        else if (item.action == (uint)ItemType.item_action_type.put_in_belt || item.action == (uint)ItemType.item_action_type.remove_from_belt)
+                        {
+                            item.container = ItemType.ItemContainerType.belt;
+                            item.y = item.x / 4;
+                            item.x %= 4;
+                        }
+                    }
+                    else
+                        item.unspecified_directory = true;
+                }
+
+                if (item.ear)
+                {
+                    //item.ear_character_class =  (GameData.CharacterClassType)
+                    reader.Read(3);
+                    item.ear_level = (byte)reader.Read(7);
+                    item.ear_name = "Fuck Off";
+                    reader.Read(16 * 7);
+                    return item;
+                }
+
+                byte[] code_bytes = new byte[4];
+                for (int i = 0; i < code_bytes.Length; i++)
+                    code_bytes[i] = (byte)(reader.Read(8));
+                code_bytes[3] = 0;
+
+                item.type = System.Text.Encoding.ASCII.GetString(code_bytes).Substring(0, 3);
+
+                ItemEntry entry;
+                if (!m_owner.m_dm.m_itemData.Get(item.type, out entry))
+                {
+                    Console.WriteLine("Failed to look up item in item data table");
+                    return item;
+                }
+
+                item.name = entry.Name;
+                item.width = (int)entry.Width;
+                item.height = (int)entry.Height;
+
+                item.is_gold = (item.type == "gld");
+
+                if (item.is_gold)
+                {
+                    bool big_pile = reader.ReadBit();
+                    if (big_pile)
+                        item.amount = (uint)reader.Read(32);
+                    else
+                        item.amount = (uint)reader.Read(12);
+
+                    return item;
+                }
+
+                item.used_sockets = (byte)reader.Read(3);
+
+                item.quality = ItemType.ItemQualityType.normal;
+
+                if (item.simple_item || item.gambling)
+                    return item;
+
+                item.level = (byte)reader.Read(7);
+
+                item.quality = (ItemType.ItemQualityType)(reader.Read(4));
+
+
+                // EVERYTHING AFTER THIS NEEDS FIXING!
+                // Item mods will NOT be read/parsed in current version.
+                // Item code and quality is enough for a hacky beta pickit.
+                //return item;
+
+                item.has_graphic = reader.ReadBit(); ;
+                if (item.has_graphic)
+                    item.graphic = (byte)reader.Read(3);
+
+                item.has_colour = reader.ReadBit();
+                if (item.has_colour)
+                    item.colour = (UInt16)reader.Read(11);
+
+                if (item.identified)
+                {
+                    switch (item.quality)
+                    {
+                        case ItemType.ItemQualityType.inferior:
+                            item.prefix = (byte)reader.Read(3);
+                            break;
+                        case ItemType.ItemQualityType.superior:
+                            item.superiority = (ItemType.SuperiorItemClassType)(reader.Read(3));
+                            break;
+                        case ItemType.ItemQualityType.magical:
+                            item.prefix = (uint)reader.Read(11);
+                            item.suffix = (uint)reader.Read(11);
+                            break;
+
+                        case ItemType.ItemQualityType.crafted:
+                        case ItemType.ItemQualityType.rare:
+                            item.prefix = (uint)reader.Read(8) - 156;
+                            item.suffix = (uint)reader.Read(8) - 1;
+                            if (ClientlessBot.debugging)
+                            {
+                                /*
+                                std::cout << "Rare prefix: " << item.prefix << std::endl;
+                                std::cout << "Rare suffix: " << item.suffix << std::endl;
+                                std::cout << get_char_array_string(data) << std::endl;
+                                 */
+                            }
+                            break;
+
+                        case ItemType.ItemQualityType.set:
+                            item.set_code = (uint)reader.Read(12);
+                            break;
+                        case ItemType.ItemQualityType.unique:
+                            if (item.type != "std") //standard of heroes exception?
+                                item.unique_code = (uint)reader.Read(12);
+                            break;
+                    }
+                }
+
+                if (item.quality == ItemType.ItemQualityType.rare || item.quality == ItemType.ItemQualityType.crafted)
+                {
+                    for (ulong i = 0; i < 3; i++)
+                    {
+                        if (reader.ReadBit())
+                            item.prefixes.Add((uint)reader.Read(11));
+                        if (reader.ReadBit())
+                            item.suffixes.Add((uint)reader.Read(11));
+                    }
+                }
+
+                if (item.rune_word)
+                {
+                    item.runeword_id = (uint)reader.Read(12);
+                    item.runeword_parameter = (byte)reader.Read(4);
+                    //std::cout << "runeword_id: " << item.runeword_id << ", parameter: " << item.runeword_parameter << std::endl;
+                }
+
+                if (item.personalised)
+                {
+                    item.personalised_name = "Fuck off";
+                    reader.Read(7 * 16);
+                }
+
+
+                item.is_armor = entry.IsArmor();
+                item.is_weapon = entry.IsWeapon();
+
+                if (item.is_armor)
+                    item.defense = (uint)reader.Read(11) - 10;
+
+                /*if(entry.throwable)
+                {
+                    reader.Read(9);
+                    reader.Read(17);
+                }
+                //special case: indestructible phase blade
+                else */
+                if (item.type == "7cr")
+                    reader.Read(8);
+                else if (item.is_armor || item.is_weapon)
+                {
+                    item.maximum_durability = (byte)reader.Read(8);
+                    item.indestructible = (uint)((item.maximum_durability == 0) ? 1 : 0);
+                    /*
+                    if(!item.indestructible)
+                    {
+                        item.durability = reader.Read(8);
+                        reader.ReadBit();
+                    }
+                    */
+
+                    //D2Hackit always reads it, hmmm. Appears to work.
+
+                    item.durability = (byte)reader.Read(8);
+                    reader.ReadBit();
+                }
+
+                if (item.has_sockets)
+                    item.sockets = (byte)reader.Read(4);
+
+                if (!item.identified)
+                    return item;
+
+                if (entry.Stackable)
+                {
+                    if (entry.Usable)
+                        reader.Read(5);
+
+                    item.amount = (uint)reader.Read(9);
+                }
+                uint set_mods = 0;
+                if (item.quality == ItemType.ItemQualityType.set)
+                    set_mods = (byte)reader.Read(5);
+
+                //reader.debugging = debugging;
+                return item;
+                while (true)
+                {
+                    //if(debugging)
+                    //	std::cout << "Reading stat ID" << std::endl;
+
+                    uint stat_id = (uint)reader.Read(9);
+
+                    if (stat_id == 0x1ff)
+                    {
+                        //if(debugging)
+                        //	std::cout << "Stat terminator encountered" << std::endl;
+                        break;
+                    }
+
+                    ItemType.ItemPropertyType item_property;
+
+
+                    //process_item_stat(stat_id, reader, item_property);
+                    //item.properties.Add(item_property);
+                }
+                //std::cout << pretty_item_stats(item) << std::endl;
+            }
+            //catch(Exception e)
+            {
+
+                //	Console.WriteLine("Error occured: ");
+
+            }
+            return item;
+
         }
 
     }
