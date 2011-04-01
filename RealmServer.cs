@@ -46,7 +46,7 @@ namespace CSharpClient
                 catch
                 {
                     Console.WriteLine("\n{0}: [MCP] Lost Connection to MCP", m_owner.Account);
-                    m_socket.Close();
+                    Kill();
                     return false;
                 }
             }
@@ -71,7 +71,7 @@ namespace CSharpClient
                 catch
                 {
                     Console.WriteLine("\n{0}: [MCP] Lost Connection to MCP", m_owner.Account);
-                    m_socket.Close();
+                    Kill();
                     return false;
                 }
             }
