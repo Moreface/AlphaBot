@@ -154,12 +154,74 @@ namespace CSharpClient
         protected Thread m_mcpThread;
         protected Thread m_gameCreationThread;
         protected Thread m_gsThread;
+
+        public Player Me { get { return BotGameData.Me; } }
+
+        public void DetermineCharacterSkillSetup()
+        {
+            if (Me.Class == GameData.CharacterClassType.SORCERESS) {
+		        if (BotGameData.SkillLevels[Skills.Type.blizzard] >= 15 && BotGameData.SkillLevels[Skills.Type.glacial_spike] >= 8 && BotGameData.SkillLevels[Skills.Type.ice_blast] >= 8) {
+			        Console.WriteLine("{0}: [D2GS] Using Blizzard/Glacial Spike/Ice Blast Sorceress setup.",Account);
+			        BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.SORCERESS_BLIZZARD;
+		        } else if (BotGameData.SkillLevels[Skills.Type.meteor] >= 15 && BotGameData.SkillLevels[Skills.Type.fire_ball] >= 15 && BotGameData.SkillLevels[Skills.Type.frozen_orb] == 0) {
+			        Console.WriteLine("{0}: [D2GS] Using Meteor/Fireball Sorceress setup.",Account);
+			        BotGameData.CharacterSkillSetup =GameData.CharacterSkillSetupType.SORCERESS_METEOR;
+		        } else if (BotGameData.SkillLevels[Skills.Type.lightning] >= 15 || BotGameData.SkillLevels[Skills.Type.chain_lightning] >= 15) {
+			        Console.WriteLine("{0}: [D2GS] Using Lightning/Chain Lightning Sorceress setup" ,Account);
+			        BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.SORCERESS_LIGHTNING;
+		        } else if (BotGameData.SkillLevels[Skills.Type.fire_ball] >= 15 && BotGameData.SkillLevels[Skills.Type.frozen_orb] >= 15) {
+			        Console.WriteLine("{0}: [D2GS] Using Meteorb Sorceress setup",Account);
+			        BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.SORCERESS_METEORB;
+		        } else {
+			        Console.WriteLine("Unknown Sorceress skill setup");
+			        BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.UNKNOWNSETUP;
+		        }
+	        } else if (Me.Class == GameData.CharacterClassType.PALADIN) {
+                if (BotGameData.SkillLevels[Skills.Type.blessed_hammer] >= 15 && BotGameData.SkillLevels[Skills.Type.concentration] >= 15) {
+                    Console.WriteLine("{0}: [D2GS] Using Hammerdin Paladin setup.",Account);
+                    BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.PALADIN_HAMMERDIN;
+                } else if (BotGameData.SkillLevels[Skills.Type.smite] >= 15 && BotGameData.SkillLevels[Skills.Type.fanaticism] >= 15) {
+                    Console.WriteLine("{0}: [D2GS] Using Smiter Paladin setup." ,Account);
+                    BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.PALADIN_SMITER;
+                } else if (BotGameData.SkillLevels[Skills.Type.vengeance] >= 15 && BotGameData.SkillLevels[Skills.Type.conviction] >= 15) {
+                    Console.WriteLine("{0}: [D2GS] Using Adam's Noob Smiter Paladin setup." ,Account);
+                    BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.PALADIN_SMITER;
+                }else {
+                    Console.WriteLine("{0}: [D2GS] Unknown Paladin skill setup." ,Account);
+                    BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.UNKNOWNSETUP;
+                }
+	        } else {
+		        Console.WriteLine("No configuration available for this character class");
+		        BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.UNKNOWNSETUP;
+	        }
+        }
+
         /*
          * 
          * In Game API
          * 
          * 
          */
+
+        public void Start()
+        {
+            m_bncsThread.Start();
+        }
+
+        public int Time()
+        {
+            return System.Environment.TickCount / 1000;
+        }
+
+        public void SendPacket(byte command, params IEnumerable<byte>[] args)
+        {
+            m_gs.Write(m_gs.BuildPacket(command, args));
+        }
+
+        public virtual void ReceivedGameServerPacket(List<byte> data)
+        {
+
+        }
 
         public void CreateGameThreadFunction()
         {
@@ -180,20 +242,15 @@ namespace CSharpClient
             }
         }
 
-        public virtual void ReceivedGameServerPacket(List<byte> data)
-        {
-
-        }
-
         public virtual void BotThreadFunction()
         {
 
         }
 
+        // MCP Functions
         public void JoinGame()
         {
             m_mcp.Write(m_mcp.BuildPacket(0x04, BitConverter.GetBytes(GameRequestId), System.Text.Encoding.ASCII.GetBytes(GameName), GenericServerConnection.zero, System.Text.Encoding.ASCII.GetBytes(GamePassword), GenericServerConnection.zero));
-            GameRequestId++;
         }
 
         public void MakeGame()
@@ -223,40 +280,240 @@ namespace CSharpClient
             GameRequestId++;
         }
 
+        // D2GS Functions
+        public bool Attack(UInt32 id)
+        {
+            if (!ConnectedToGs)
+                return false;
+            switch (BotGameData.CharacterSkillSetup)
+            {
+                case GameData.CharacterSkillSetupType.SORCERESS_LIGHTNING:
+                    if(BotGameData.RightSkill != (uint)Skills.Type.chain_lightning)
+                        SwitchSkill((uint)Skills.Type.chain_lightning);
+                    Thread.Sleep(300);
+                    CastOnObject(id);
+                    break;
+                case GameData.CharacterSkillSetupType.SORCERESS_BLIZZARD:
+                    if (BotGameData.RightSkill != (uint)Skills.Type.blizzard)
+                        SwitchSkill((uint)Skills.Type.blizzard);
+                    Thread.Sleep(300);
+                    CastOnObject(id);
+                    break;
+                case GameData.CharacterSkillSetupType.SORCERESS_METEOR:
+                    break;
+                case GameData.CharacterSkillSetupType.SORCERESS_METEORB:
+                    break;
+            }
+            return true;
+        }
+
+        public virtual void Pickit()
+        {
+
+        }
+
+        public void CastOnCoord(UInt16 x, UInt16 y)
+        {
+            SendPacket(0x0c, BitConverter.GetBytes(x), BitConverter.GetBytes(y));
+            Thread.Sleep(200);
+        }
+
+        public void CastOnObject(uint id)
+        {
+            SendPacket(0x0d,GenericServerConnection.one, BitConverter.GetBytes(id));
+            Thread.Sleep(200);
+        }
+
+        public void CastOnSelf()
+        {
+            SendPacket(0x0c, BitConverter.GetBytes((UInt16)BotGameData.Me.Location.X), BitConverter.GetBytes((UInt16)BotGameData.Me.Location.Y));
+            Thread.Sleep(200);
+        }
+
+        public bool GetAliveNpc(String name, double range, out NpcEntity output)
+        {
+            var n = (from npc in BotGameData.Npcs
+                     where npc.Value.Name == name
+                     && npc.Value.Life > 0
+                     && (range == 0 || range > Me.Location.Distance(npc.Value.Location))
+                     select npc).FirstOrDefault();
+            if (n.Value == null)
+            {
+                output = default(NpcEntity);
+                return false;
+            }
+            output = n.Value;
+            return true;
+        }
+
+        public NpcEntity GetNpc(String name)
+        {
+            NpcEntity npc = (from n in BotGameData.Npcs
+                             where n.Value.Name == name
+                             select n).FirstOrDefault().Value;
+            return npc;
+        }
+
+        public UInt32 GetSkillLevel(Skills.Type skill)
+        {
+            return BotGameData.SkillLevels[skill] + BotGameData.ItemSkillLevels[skill];
+        }
+
         public void LeaveGame()
         {
             InGame = false;
             ConnectedToGs = false;
 
             Console.WriteLine("{0}: [D2GS] Leaving the game.", Account);
-            m_gs.Write(m_gs.BuildPacket(0x69));
+            SendPacket(0x69);
 
             Thread.Sleep(500);
-            m_gs.m_socket.Close();
-            if(m_gs.m_pingThread.IsAlive)
-                m_gs.m_pingThread.Join();   
-            if(m_gsThread.IsAlive)
+
+            m_gs.Kill();
+            
+            if (m_gs.m_pingThread.IsAlive)
+                m_gs.m_pingThread.Join();
+            if (m_gsThread.IsAlive)
                 m_gsThread.Join();
+
             Status = ClientStatus.STATUS_NOT_IN_GAME;
         }
 
-        public void UsePotion()
+        public void MoveTo(UInt16 x, UInt16 y)
         {
-            var a = from n in BotGameData.Belt.m_items 
-                    where n.type == "rv1" select n;
-
-            foreach (var pot in a)
-            {
-                m_gs.Write(m_gs.BuildPacket(0x26, BitConverter.GetBytes(pot.id), GenericServerConnection.nulls, GenericServerConnection.nulls));
-                BotGameData.Belt.m_items.Remove(pot);
-                break;
-            }
-            
+            MoveTo(new Coordinate(x, y));
         }
 
-        public void Start()
+        public void MoveTo(Coordinate target)
         {
-            m_bncsThread.Start();
+            int time = Time();
+            if (time - BotGameData.LastTeleport > 5)
+            {
+                SendPacket(0x5f, BitConverter.GetBytes((UInt16)target.X), BitConverter.GetBytes((UInt16)target.Y));
+                BotGameData.LastTeleport = time;
+                Thread.Sleep(120);
+            }
+            else
+            {
+                double distance = BotGameData.Me.Location.Distance(target);
+                SendPacket(0x03, BitConverter.GetBytes((UInt16)target.X), BitConverter.GetBytes((UInt16)target.Y));
+                Thread.Sleep((int)(distance * 80));
+            }
+            BotGameData.Me.Location = target;
+        }
+
+        public virtual void Precast()
+        {
+
+        }
+
+        public void RequestReassignment()
+        {
+            SendPacket(0x4b, GenericServerConnection.nulls, BitConverter.GetBytes(Me.Id));
+        }
+
+        public virtual void StashItems()
+        {
+
+        }
+
+        public void SwitchSkill(uint skill)
+        {
+            BotGameData.RightSkill = skill;
+            byte[] temp = {0xFF, 0xFF, 0xFF , 0xFF };
+            SendPacket(0x3c, BitConverter.GetBytes(skill), temp);
+            Thread.Sleep(100);
+        }
+
+        public bool TalkToHealer(UInt32 id)
+        {
+            if (!TalkToTrader(id))
+                return false;
+
+            SendPacket(0x30, GenericServerConnection.one, BitConverter.GetBytes(id));
+
+            return true;
+        }
+
+        public bool TalkToTrader(UInt32 id)
+        {
+            BotGameData.TalkedToNpc = false;
+            NpcEntity npc = BotGameData.Npcs[id];
+
+            double distance = BotGameData.Me.Location.Distance(npc.Location);
+
+            //if(debugging)
+            Console.WriteLine("{0}: [D2GS] Attempting to talk to NPC",Account);
+
+            SendPacket(0x59, GenericServerConnection.one, BitConverter.GetBytes(id),
+                        BitConverter.GetBytes((UInt16)BotGameData.Me.Location.X), GenericServerConnection.zero, GenericServerConnection.zero,
+                        BitConverter.GetBytes((UInt16)BotGameData.Me.Location.Y), GenericServerConnection.zero, GenericServerConnection.zero);
+
+            int sleepStep = 200;
+            for (int timeDifference = (int)distance * 120; timeDifference > 0; timeDifference -= sleepStep)
+            {
+                SendPacket(0x04, GenericServerConnection.one, BitConverter.GetBytes(id));
+                Thread.Sleep(Math.Min(sleepStep,timeDifference));
+            }
+
+            SendPacket(0x13, GenericServerConnection.one, BitConverter.GetBytes(id));
+            Thread.Sleep(200);
+            SendPacket(0x2f, GenericServerConnection.one, BitConverter.GetBytes(id));
+
+            int timeoutStep = 100;
+            for (long npc_timeout = 4000; npc_timeout > 0 && !BotGameData.TalkedToNpc; npc_timeout -= timeoutStep)
+		            Thread.Sleep(timeoutStep);
+
+            if (!BotGameData.TalkedToNpc)
+            {
+                Console.WriteLine("{0}: [D2GS] Failed to talk to NPC", Account);
+                return false;
+            }
+            return true;
+        }
+
+        public bool TownPortal()
+        {
+            BotGameData.Me.PortalId = 0;
+            SwitchSkill(0xDC);
+            CastOnSelf();
+        	int timeoutStep = 100;
+	        for (int npc_timeout = 2000; npc_timeout > 0 && BotGameData.Me.PortalId == 0; npc_timeout -= timeoutStep)
+        		Thread.Sleep(timeoutStep);
+
+            if (BotGameData.Me.PortalId == 0)
+            {
+                Console.WriteLine("{0}: [D2GS] Failed to take town portal.", Account);
+                return false;
+            }
+
+            byte[] temp = {0x02,0x00,0x00,0x00}; 
+            SendPacket(0x13, temp, BitConverter.GetBytes(BotGameData.Me.PortalId));
+	        
+            Thread.Sleep(400);
+
+            Status = ClientStatus.STATUS_IN_TOWN;
+
+            return true;
+        }
+
+        public virtual void UsePotion()
+        {
+            ItemType pot = (from n in BotGameData.Belt.m_items 
+                    where n.type == "rv1" select n).FirstOrDefault();
+
+            if (pot == default(ItemType))
+            {
+                Console.WriteLine("{0}: [D2GS] No potions found in belt!", Account);
+                return;
+            }
+            SendPacket(0x26, BitConverter.GetBytes(pot.id), GenericServerConnection.nulls, GenericServerConnection.nulls);
+            BotGameData.Belt.m_items.Remove(pot);
+        }
+
+        public void WeaponSwap()
+        {
+
         }
 
         /*
@@ -318,7 +575,7 @@ namespace CSharpClient
         public void StartGameCreationThread()
         {
             Console.WriteLine("{0}: [BOT]  Game creation thread started.", m_account);
-            m_bncs.m_socket.Close();
+            m_bncs.Kill();
             m_gameCreationThread.Start();
         }
 
