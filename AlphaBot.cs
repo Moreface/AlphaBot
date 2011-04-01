@@ -33,7 +33,7 @@ namespace CSharpClient
 
             foreach (ItemType i in m_pickitList)
             {
-                Console.WriteLine("{0}: {1}, {2}, Ethereal:{3}", i.name, i.type, i.quality, i.ethereal);
+                Console.WriteLine("{0}: {1}, {2}, Ethereal:{3}, {4}", i.name, i.type, i.quality, i.ethereal,i.sockets);
             }
         }
 
@@ -54,8 +54,8 @@ namespace CSharpClient
                             m_redPortal.Location.X = BitConverter.ToUInt16(packet, 8);
                             m_redPortal.Location.Y = BitConverter.ToUInt16(packet, 10);
 
-                            //if (debugging) 
-                            Console.WriteLine("{0}: [D2GS] Received red portal ID and coordinates", Account);
+                            if (debugging) 
+                                Console.WriteLine("{0}: [D2GS] Received red portal ID and coordinates", Account);
                         }
                         // A5 WP
                         if (obj == 0x01ad)
@@ -64,7 +64,7 @@ namespace CSharpClient
                             m_harrogathWp.Location.X = BitConverter.ToUInt16(packet, 8);
                             m_harrogathWp.Location.Y = BitConverter.ToUInt16(packet, 10);
 
-                            //if (debugging) 
+                            if (debugging) 
                                 Console.WriteLine("{0}: [D2GS] Received A5 WP id and coordinates", Account);
                         }
                         // A1 WP
@@ -73,7 +73,8 @@ namespace CSharpClient
                             m_act1Wp.Id = BitConverter.ToUInt32(packet, 2);
                             m_act1Wp.Location.X = BitConverter.ToUInt16(packet, 8);
                             m_act1Wp.Location.Y = BitConverter.ToUInt16(packet, 10);
-                            Console.WriteLine("{0}: [D2GS] Received A1 WP id and coordinates", Account);
+                            if(debugging)
+                                Console.WriteLine("{0}: [D2GS] Received A1 WP id and coordinates", Account);
                         }
                     }
                     break;
@@ -90,8 +91,185 @@ namespace CSharpClient
 
         public override void BotThreadFunction()
         {
-            //Console.WriteLine("{0}: [D2GS] Bot is in town.", Account);
-        }
+            Int32 startTime = Time();
+            UInt32 id;
+            UInt32 curLife = 0;
+            Console.WriteLine("{0}: [D2GS] Bot is in town.", Account);
+
+            Thread.Sleep(500);
+
+            StashItems();
+
+
+            if (BotGameData.CurrentAct == GameData.ActType.ACT_I)
+            {
+                Console.WriteLine("{0}: [D2GS] Moving to Act 5", Account);
+                MoveTo(m_act1Wp.Location);
+                byte[] temp = {0x02,0x00,0x00,0x00};
+                SendPacket(0x13, temp, BitConverter.GetBytes(m_act1Wp.Id));
+                Thread.Sleep(300);
+                byte[] tempa = {0x6D,0x00,0x00,0x00};
+                SendPacket(0x49, BitConverter.GetBytes(m_act1Wp.Id), tempa);
+                Thread.Sleep(300);
+                MoveTo(5105, 5050);
+                MoveTo(5100, 5025);
+                MoveTo(5096, 5018);
+            }
+
+            if (BotGameData.WeaponSet != 0)
+                WeaponSwap();
+
+            if (Pindle)
+            {
+                MoveTo(5089, 5019);
+                MoveTo(5090, 5030);
+                MoveTo(5082, 5033);
+                MoveTo(5074, 5033);
+
+                NpcEntity malah = GetNpc("Malah");
+                TalkToTrader(malah.Id);
+                if (GetSkillLevel(Skills.Type.book_of_townportal) < 10)
+                {
+                    Thread.Sleep(300);
+                    SendPacket(0x38, GenericServerConnection.one, BitConverter.GetBytes(malah.Id), GenericServerConnection.nulls);
+                    Thread.Sleep(2000);
+                    ItemType n = (from item in BotGameData.Items
+                             where item.Value.action == (uint)ItemType.item_action_type.add_to_shop
+                             && item.Value.type == "tsc"
+                             select item).FirstOrDefault().Value;
+
+                    Console.WriteLine("{0}: [D2GS] Buying TPs", Account);
+                    byte[] temp = {0x02,0x00,0x00,0x00};
+                    for (int i = 0; i < 9; i++)
+                    {
+                        SendPacket(0x32, BitConverter.GetBytes(malah.Id), BitConverter.GetBytes(n.id), GenericServerConnection.nulls, temp);
+                        Thread.Sleep(200);
+                    }
+                    Thread.Sleep(500);
+                }
+                SendPacket(0x30, GenericServerConnection.one, BitConverter.GetBytes(malah.Id));
+                Thread.Sleep(300);
+
+                MoveTo(5073, 5032);
+                MoveTo(5073, 5044);
+                MoveTo(5078, 5055);
+                MoveTo(5081, 5065);
+                MoveTo(5081, 5076);
+
+                if (!BotGameData.HasMerc)
+                {
+                    Console.WriteLine("{0}: [D2GS] Resing Merc", Account);
+                    MoveTo(5082, 5080);
+                    MoveTo(5060, 5076);
+
+                    NpcEntity qual = GetNpc("Qual-Kehk");
+                    TalkToTrader(qual.Id);
+                    byte[] three = {0x03,0x00,0x00,0x00};
+                    SendPacket(0x38, three, BitConverter.GetBytes(qual.Id), GenericServerConnection.nulls);
+                    Thread.Sleep(300);
+                    SendPacket(0x62,BitConverter.GetBytes(qual.Id));
+                    Thread.Sleep(300);
+                    SendPacket(0x38, three, BitConverter.GetBytes(qual.Id), GenericServerConnection.nulls);
+                    Thread.Sleep(300);
+                    SendPacket(0x30, GenericServerConnection.one, BitConverter.GetBytes(qual.Id));
+                    Thread.Sleep(300);
+
+                    MoveTo(5060, 5076);
+                    MoveTo(5082, 5080);
+                    MoveTo(5081, 5076);
+                }
+
+                MoveTo(5082, 5087);
+                MoveTo(5085, 5098);
+                MoveTo(5088, 5110);
+                MoveTo(5093, 5121);
+                MoveTo(5103, 5124);
+                MoveTo(5111, 5121);
+
+                Thread.Sleep(700);
+                byte[] two = {0x02,0x00,0x00,0x00};
+                SendPacket(0x13,two, BitConverter.GetBytes(m_redPortal.Id));
+                Thread.Sleep(500);
+
+                Status = ClientStatus.STATUS_KILLING_PINDLESKIN;
+                Console.WriteLine("{0}: [D2GS] Killing Pindleskin", Account);
+                Precast();
+
+                SwitchSkill(0x36);
+                Thread.Sleep(300);
+
+                CastOnCoord(10064, 13286);
+                Thread.Sleep(300);
+                CastOnCoord(10061, 13260);
+                Thread.Sleep(300);
+                CastOnCoord(10058, 13236);
+                Thread.Sleep(300);
+
+                Console.WriteLine("Current Position: ({0},{1})", Me.Location.X,Me.Location.Y);
+                /*
+                NpcEntity pindle = GetNpc("Pindleskin");
+                if (pindle == default(NpcEntity))
+                {
+                    Thread.Sleep(500);
+                    pindle = GetNpc("Pindleskin");
+                    if (pindle == default(NpcEntity))
+                    {
+                        Console.WriteLine("{0}: [D2GS] Unable to find Pindleskin, probably got stuck.", Account);
+                        LeaveGame();
+                        return;
+                    }
+                }
+                curLife = BotGameData.Npcs[pindle.Id].Life;
+                if (BotGameData.Npcs[pindle.Id].IsLightning && BotGameData.CharacterSkillSetup == GameData.CharacterSkillSetupType.SORCERESS_LIGHTNING && Difficulty == GameDifficulty.HELL)
+                {
+                    LeaveGame();
+                    return;
+                }
+                while (BotGameData.Npcs[pindle.Id].Life > 0)
+                {
+                    if (!Attack(pindle.Id))
+                    {
+                        LeaveGame();
+                        return;
+                    }
+                    if (curLife > BotGameData.Npcs[pindle.Id].Life)
+                    {
+                        curLife = BotGameData.Npcs[pindle.Id].Life;
+                        Console.WriteLine("{0}: [D2GS] Pindleskins Life: {1}", Account, curLife);
+                    }
+                }
+                Console.WriteLine("{0}: [D2GS] {1} is dead. Killing minions", Account, pindle.Name);
+                 */
+                NpcEntity monster;
+                while (GetAliveNpc("Defiled Warrior", 20, out monster))
+                {
+                    Console.WriteLine("{0}: [D2GS] Killing Defiled Warrior", Account);
+                    while (BotGameData.Npcs[monster.Id].Life > 0)
+                    {
+                        if (!Attack(monster.Id))
+                        {
+                            LeaveGame();
+                            return;
+                        }
+                        if (curLife > BotGameData.Npcs[monster.Id].Life)
+                        {
+                            curLife = BotGameData.Npcs[monster.Id].Life;
+                            Console.WriteLine("{0}: [D2GS] Defiled Warriors Life: {1}", Account, curLife);
+                        }
+                    }
+                }
+                Console.WriteLine("{0}: [D2GS] Minions are dead, looting...", Account);
+                Pickit();
+
+                if (!TownPortal())
+                {
+                    LeaveGame();
+                    return;
+                }
+            }
+            FailedGame = false;
+            LeaveGame();
+        }   
 
         public AlphaBot(bool pindle, bool eld, bool shenk, DataManager dm, String bnetServer, String account, String password, String classicKey, String expansionKey, uint potlife, uint chickenlife, String binaryDirectory, GameDifficulty difficulty, String gamepass) :
             base(dm,bnetServer,account,password,classicKey,expansionKey,potlife,chickenlife,binaryDirectory,difficulty,gamepass)
