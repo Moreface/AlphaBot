@@ -31,6 +31,12 @@ namespace CSharpClient
             }
         }
 
+        public void Kill()
+        {
+            m_stream.Close();
+            m_socket.Close();
+        }
+
         public virtual void PrintPacket(byte[] packet)
         {
             if (ClientlessBot.debugging)
