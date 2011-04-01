@@ -24,6 +24,19 @@ namespace CSharpClient
 		    ASSASSIN
 	    };
 
+        public enum CharacterSkillSetupType
+        {
+            UNKNOWNSETUP,
+            SORCERESS_LIGHTNING,
+            SORCERESS_METEOR,
+            SORCERESS_ORB,
+            SORCERESS_BLIZZARD,
+            SORCERESS_METEORB,
+            PALADIN_HAMMERDIN,
+            PALADIN_SMITER
+        };
+
+        
         public enum ActType
         {
             ACT_I = 0,
@@ -56,6 +69,10 @@ namespace CSharpClient
          * Members and Properties
          * 
          */
+
+        private CharacterSkillSetupType m_skillSetup;
+        public CharacterSkillSetupType CharacterSkillSetup { get { return m_skillSetup; } set { m_skillSetup = value; } }
+
         protected ActType m_currentAct;
         public ActType CurrentAct { get { return m_currentAct; } set { m_currentAct = value; } }
 
@@ -76,6 +93,10 @@ namespace CSharpClient
 
         protected UInt32 m_experience;
         public UInt32 Experience { get { return m_experience; } set { m_experience = value; } }
+
+        protected UInt32 m_rightSkill;
+        public UInt32 RightSkill { get { return m_rightSkill; } set { m_rightSkill = value; } }
+
 
         protected Player m_me;
         public Player Me { get { return m_me; } set { m_me = value; } }
