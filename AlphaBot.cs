@@ -89,35 +89,71 @@ namespace CSharpClient
             }
         }
 
-        public override void BotThreadFunction()
+        public void VisitMalah()
         {
-            Int32 startTime = Time();
+            NpcEntity malah = GetNpc("Malah");
+            TalkToTrader(malah.Id);
+            if (GetSkillLevel(Skills.Type.book_of_townportal) < 10)
+            {
+                Thread.Sleep(300);
+                SendPacket(0x38, GenericServerConnection.one, BitConverter.GetBytes(malah.Id), GenericServerConnection.nulls);
+                Thread.Sleep(2000);
+                ItemType n = (from item in BotGameData.Items
+                              where item.Value.action == (uint)ItemType.item_action_type.add_to_shop
+                              && item.Value.type == "tsc"
+                              select item).FirstOrDefault().Value;
+
+                Console.WriteLine("{0}: [D2GS] Buying TPs", Account);
+                byte[] temp = { 0x02, 0x00, 0x00, 0x00 };
+                for (int i = 0; i < 9; i++)
+                {
+                    SendPacket(0x32, BitConverter.GetBytes(malah.Id), BitConverter.GetBytes(n.id), GenericServerConnection.nulls, temp);
+                    Thread.Sleep(200);
+                }
+                Thread.Sleep(500);
+            }
+            SendPacket(0x30, GenericServerConnection.one, BitConverter.GetBytes(malah.Id));
+            Thread.Sleep(300);
+        }
+
+        public void ReviveMerc()
+        {
+            if (!BotGameData.HasMerc)
+            {
+                Console.WriteLine("{0}: [D2GS] Reviving Merc", Account);
+                MoveTo(5082, 5080);
+                MoveTo(5060, 5076);
+
+                NpcEntity qual = GetNpc("Qual-Kehk");
+                TalkToTrader(qual.Id);
+                byte[] three = { 0x03, 0x00, 0x00, 0x00 };
+                SendPacket(0x38, three, BitConverter.GetBytes(qual.Id), GenericServerConnection.nulls);
+                Thread.Sleep(300);
+                SendPacket(0x62, BitConverter.GetBytes(qual.Id));
+                Thread.Sleep(300);
+                SendPacket(0x38, three, BitConverter.GetBytes(qual.Id), GenericServerConnection.nulls);
+                Thread.Sleep(300);
+                SendPacket(0x30, GenericServerConnection.one, BitConverter.GetBytes(qual.Id));
+                Thread.Sleep(300);
+
+                MoveTo(5060, 5076);
+                MoveTo(5082, 5080);
+                MoveTo(5081, 5076);
+            }
+        }
+
+        void EnterRedPortal()
+        {
+            Thread.Sleep(700);
+            byte[] two = { 0x02, 0x00, 0x00, 0x00 };
+            SendPacket(0x13, two, BitConverter.GetBytes(m_redPortal.Id));
+            Thread.Sleep(500);
+        }
+
+        public void DoPindle()
+        {
             UInt32 id;
             UInt32 curLife = 0;
-            Console.WriteLine("{0}: [D2GS] Bot is in town.", Account);
-
-            Thread.Sleep(500);
-
-            StashItems();
-
-
-            if (BotGameData.CurrentAct == GameData.ActType.ACT_I)
-            {
-                Console.WriteLine("{0}: [D2GS] Moving to Act 5", Account);
-                MoveTo(m_act1Wp.Location);
-                byte[] temp = {0x02,0x00,0x00,0x00};
-                SendPacket(0x13, temp, BitConverter.GetBytes(m_act1Wp.Id));
-                Thread.Sleep(300);
-                byte[] tempa = {0x6D,0x00,0x00,0x00};
-                SendPacket(0x49, BitConverter.GetBytes(m_act1Wp.Id), tempa);
-                Thread.Sleep(300);
-                MoveTo(5105, 5050);
-                MoveTo(5100, 5025);
-                MoveTo(5096, 5018);
-            }
-
-            if (BotGameData.WeaponSet != 0)
-                WeaponSwap();
 
             if (Pindle)
             {
@@ -126,29 +162,7 @@ namespace CSharpClient
                 MoveTo(5082, 5033);
                 MoveTo(5074, 5033);
 
-                NpcEntity malah = GetNpc("Malah");
-                TalkToTrader(malah.Id);
-                if (GetSkillLevel(Skills.Type.book_of_townportal) < 10)
-                {
-                    Thread.Sleep(300);
-                    SendPacket(0x38, GenericServerConnection.one, BitConverter.GetBytes(malah.Id), GenericServerConnection.nulls);
-                    Thread.Sleep(2000);
-                    ItemType n = (from item in BotGameData.Items
-                             where item.Value.action == (uint)ItemType.item_action_type.add_to_shop
-                             && item.Value.type == "tsc"
-                             select item).FirstOrDefault().Value;
-
-                    Console.WriteLine("{0}: [D2GS] Buying TPs", Account);
-                    byte[] temp = {0x02,0x00,0x00,0x00};
-                    for (int i = 0; i < 9; i++)
-                    {
-                        SendPacket(0x32, BitConverter.GetBytes(malah.Id), BitConverter.GetBytes(n.id), GenericServerConnection.nulls, temp);
-                        Thread.Sleep(200);
-                    }
-                    Thread.Sleep(500);
-                }
-                SendPacket(0x30, GenericServerConnection.one, BitConverter.GetBytes(malah.Id));
-                Thread.Sleep(300);
+                VisitMalah();
 
                 MoveTo(5073, 5032);
                 MoveTo(5073, 5044);
@@ -156,28 +170,7 @@ namespace CSharpClient
                 MoveTo(5081, 5065);
                 MoveTo(5081, 5076);
 
-                if (!BotGameData.HasMerc)
-                {
-                    Console.WriteLine("{0}: [D2GS] Resing Merc", Account);
-                    MoveTo(5082, 5080);
-                    MoveTo(5060, 5076);
-
-                    NpcEntity qual = GetNpc("Qual-Kehk");
-                    TalkToTrader(qual.Id);
-                    byte[] three = {0x03,0x00,0x00,0x00};
-                    SendPacket(0x38, three, BitConverter.GetBytes(qual.Id), GenericServerConnection.nulls);
-                    Thread.Sleep(300);
-                    SendPacket(0x62,BitConverter.GetBytes(qual.Id));
-                    Thread.Sleep(300);
-                    SendPacket(0x38, three, BitConverter.GetBytes(qual.Id), GenericServerConnection.nulls);
-                    Thread.Sleep(300);
-                    SendPacket(0x30, GenericServerConnection.one, BitConverter.GetBytes(qual.Id));
-                    Thread.Sleep(300);
-
-                    MoveTo(5060, 5076);
-                    MoveTo(5082, 5080);
-                    MoveTo(5081, 5076);
-                }
+                ReviveMerc();
 
                 MoveTo(5082, 5087);
                 MoveTo(5085, 5098);
@@ -186,13 +179,11 @@ namespace CSharpClient
                 MoveTo(5103, 5124);
                 MoveTo(5111, 5121);
 
-                Thread.Sleep(700);
-                byte[] two = {0x02,0x00,0x00,0x00};
-                SendPacket(0x13,two, BitConverter.GetBytes(m_redPortal.Id));
-                Thread.Sleep(500);
+                EnterRedPortal();
 
                 Status = ClientStatus.STATUS_KILLING_PINDLESKIN;
                 Console.WriteLine("{0}: [D2GS] Killing Pindleskin", Account);
+
                 Precast();
 
                 SwitchSkill(0x36);
@@ -205,7 +196,7 @@ namespace CSharpClient
                 CastOnCoord(10058, 13236);
                 Thread.Sleep(300);
 
-                Console.WriteLine("Current Position: ({0},{1})", Me.Location.X,Me.Location.Y);
+                Console.WriteLine("Current Position: ({0},{1})", Me.Location.X, Me.Location.Y);
                 /*
                 NpcEntity pindle = GetNpc("Pindleskin");
                 if (pindle == default(NpcEntity))
@@ -267,6 +258,43 @@ namespace CSharpClient
                     return;
                 }
             }
+        }
+
+        public void MoveToAct5()
+        {
+            if (BotGameData.CurrentAct == GameData.ActType.ACT_I)
+            {
+                Console.WriteLine("{0}: [D2GS] Moving to Act 5", Account);
+                MoveTo(m_act1Wp.Location);
+                byte[] temp = { 0x02, 0x00, 0x00, 0x00 };
+                SendPacket(0x13, temp, BitConverter.GetBytes(m_act1Wp.Id));
+                Thread.Sleep(300);
+                byte[] tempa = { 0x6D, 0x00, 0x00, 0x00 };
+                SendPacket(0x49, BitConverter.GetBytes(m_act1Wp.Id), tempa);
+                Thread.Sleep(300);
+                MoveTo(5105, 5050);
+                MoveTo(5100, 5025);
+                MoveTo(5096, 5018);
+            }
+        }
+
+        public override void BotThreadFunction()
+        {
+            Int32 startTime = Time();
+            
+            Console.WriteLine("{0}: [D2GS] Bot is in town.", Account);
+
+            Thread.Sleep(500);
+
+            StashItems();
+
+            MoveToAct5();
+
+            if (BotGameData.WeaponSet != 0)
+                WeaponSwap();
+
+            DoPindle();
+           
             FailedGame = false;
             LeaveGame();
         }   
