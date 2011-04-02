@@ -153,8 +153,7 @@ namespace CSharpClient
         protected void ItemAction(byte type, List<byte> data)
         {
             ItemType item = ParseItem(data);
-
-            m_owner.BotGameData.Items.Add(item.id, item);
+            ItemType temp;
 
             if (!item.ground && !item.unspecified_directory)
             {
@@ -173,6 +172,14 @@ namespace CSharpClient
                         m_owner.BotGameData.Belt.Add(item);
                         break;
                 }
+            }
+
+            lock (m_owner.ItemListLock)
+            {
+                if (m_owner.BotGameData.Items.TryGetValue(item.id, out temp))
+                    m_owner.BotGameData.Items[item.id] = item;
+                else
+                    m_owner.BotGameData.Items.Add(item.id, item);
             }
         }
 
@@ -662,7 +669,12 @@ namespace CSharpClient
                         bytesRead = m_stream.Read(byteBuffer, 0, byteBuffer.Length);
                         buffer.AddRange(new List<byte>(byteBuffer).GetRange(0, bytesRead));
                     }
-
+                    else
+                        Thread.Sleep(100);
+                    while (m_stream.DataAvailable)
+                    {
+                        buffer.Add((byte)m_stream.ReadByte());
+                    }
                 }
                 catch
                 {
