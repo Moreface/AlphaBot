@@ -230,9 +230,9 @@ namespace CSharpClient
 
                     output.SuperUnique = false;
 
-                    if (br.ReadBit())
+                    output.HasFlags = br.ReadBit();
+                    if (output.HasFlags)
                     {
-                        output.HasFlags = true;
                         output.Champion = br.ReadBit();
                         output.Unique = br.ReadBit();
                         output.SuperUnique = br.ReadBit();
