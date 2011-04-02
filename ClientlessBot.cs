@@ -25,7 +25,7 @@ using System.Threading;
 
 namespace CSharpClient
 {
-    class ClientlessBot
+    class ClientlessBot : IDisposable
     {
         public static bool debugging = false;
 
@@ -561,12 +561,6 @@ namespace CSharpClient
             m_gameCreationThread = new Thread(CreateGameThreadFunction);
         }
 
-        ~ClientlessBot()
-        {
-            if(m_gs.m_socket.Connected)
-                LeaveGame();
-        }
-
         public void StartMcpThread()
         {
             m_mcpThread.Start();
@@ -610,5 +604,37 @@ namespace CSharpClient
             m_gameData.WeaponSet = 0;
             m_gameData.HasMerc = false;
         }
+
+        #region IDisposable Members
+
+        private bool m_disposed;
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        public virtual void Dispose(bool disposing)
+        {
+            if (!this.m_disposed)
+            {
+                if (disposing)
+                {
+                    if (m_gs.m_socket.Connected)
+                        LeaveGame();
+                }
+            }
+
+            m_disposed = true;
+        }
+
+        #endregion
+
+        ~ClientlessBot()
+        {
+            Dispose(false);    
+        }
+
     }
 }
