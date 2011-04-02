@@ -350,7 +350,7 @@ namespace CSharpClient
 
         protected void VoidRequest(byte type, List<byte> data)
         {
-            Console.WriteLine("{0}: [BNCS] Unknown Packet Received... Ignoring...", m_owner.Account);
+            Console.WriteLine("{0}: [BNCS] Unknown Packet Received... Ignoring... 0x{1:X}", m_owner.Account,type);
         }
 
         protected void PingRequest(byte type, List<byte> data)
@@ -402,6 +402,62 @@ namespace CSharpClient
                 Console.WriteLine("\tMPQ File Name: {0}", mpq_file_name);
                 Console.WriteLine("\tFormula String: {0}", formula_string);
             }
+
+
+            TcpClient bnftp = new TcpClient();
+            bnftp.Connect(m_owner.BattleNetServer, s_bncsPort);
+            NetworkStream ftpstream = bnftp.GetStream();
+            if (ftpstream.CanWrite)
+            {
+                //Console.WriteLine(" Connected");
+                ftpstream.WriteByte(0x02);
+                List<byte> bytes = new List<byte>();
+                byte[] tempftp = { 0x2f, 0x00, 0x00, 0x01 };
+
+                bytes.AddRange(tempftp);
+                bytes.AddRange(System.Text.Encoding.ASCII.GetBytes(platform));
+                bytes.AddRange(System.Text.Encoding.ASCII.GetBytes(classic_id));
+                bytes.AddRange(nulls);
+                bytes.AddRange(nulls);
+                bytes.AddRange(nulls);
+                bytes.AddRange(System.Text.Encoding.ASCII.GetBytes(mpq_file_time));
+                bytes.AddRange(System.Text.Encoding.ASCII.GetBytes(mpq_file_name));
+                bytes.AddRange(zero);
+
+                ftpstream.Write(bytes.ToArray(), 0, bytes.Count);
+
+                List<byte> buffer = new List<byte>();
+
+                do
+                {
+                    buffer.Add((byte)ftpstream.ReadByte());
+                } while (buffer.Count < 8);
+                byte[] bufferBytes = buffer.ToArray();
+                UInt16 headerSize = BitConverter.ToUInt16(bufferBytes, 0);
+                UInt32 fileSize = BitConverter.ToUInt32(bufferBytes, 4);
+                UInt32 totalSize = fileSize + headerSize;
+
+                Console.WriteLine("{0}: [BNCS] Starting BNFTP download",m_owner.Account);
+
+                do
+                {
+                    if (ftpstream.DataAvailable)
+                        buffer.Add((byte)ftpstream.ReadByte());
+                    else
+                        break;
+
+                } while (buffer.Count < totalSize);
+
+                Console.WriteLine("{0}: [BNCS] Finished BNFTP download",m_owner.Account);
+
+                ftpstream.Close();
+                bnftp.Close();
+
+            }
+            else
+            {
+            }
+
             uint exe_checksum = AdvancedCheckRevision.FastComputeHash(formula_string, mpq_file_name, m_owner.BinaryDirectory + "Game.exe", 
                                                             m_owner.BinaryDirectory + "Bnclient.dll", m_owner.BinaryDirectory + "D2Client.dll");
             /*
