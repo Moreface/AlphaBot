@@ -208,12 +208,11 @@ namespace CSharpClient
 
         protected void EnterChat(byte type, List<byte> data)
         {
-            Console.WriteLine("{0}: [BNCS] Entered the chat.", m_owner.Account);
-            byte[] packeta = {0xFF, 0x46, 0x04, 0x00 };
-            m_stream.Write(packeta, 0, packeta.Length);
-            byte[] packetb = BuildPacket((byte)0x15, System.Text.Encoding.ASCII.GetBytes(platform), System.Text.Encoding.ASCII.GetBytes(lod_id), BitConverter.GetBytes((uint)System.Environment.TickCount));
-            m_stream.Write(packetb,0,packetb.Length);
-
+            if (ClientlessBot.debugging)
+                Console.WriteLine("{0}: [BNCS] Entered the chat.", m_owner.Account);
+            Write(BuildPacket(0x46, nulls));
+            Write(BuildPacket(0x15, System.Text.Encoding.ASCII.GetBytes(platform), System.Text.Encoding.ASCII.GetBytes(lod_id), nulls, BitConverter.GetBytes((uint)System.Environment.TickCount)));
+            
             m_owner.StartGameCreationThread();
         }
 
@@ -350,14 +349,17 @@ namespace CSharpClient
 
         protected void VoidRequest(byte type, List<byte> data)
         {
-            Console.WriteLine("{0}: [BNCS] Unknown Packet Received... Ignoring... 0x{1:X}", m_owner.Account,type);
+            if (ClientlessBot.debugging)
+                Console.WriteLine("{0}: [BNCS] Unknown Packet Received... Ignoring... 0x{1:X}", m_owner.Account,type);
         }
 
         protected void PingRequest(byte type, List<byte> data)
         {
-            Console.Write("{0}: [BNCS] Replying to Ping request ........", m_owner.Account);
+            if (ClientlessBot.debugging)
+                Console.Write("{0}: [BNCS] Replying to Ping request ........", m_owner.Account);
             m_stream.Write(data.ToArray(), 0, data.Count);
-            Console.WriteLine("Done");
+            if (ClientlessBot.debugging) 
+                Console.WriteLine("Done");
         }
 
         protected void AuthCheck(byte type, List<byte> data)
@@ -436,8 +438,8 @@ namespace CSharpClient
                 UInt16 headerSize = BitConverter.ToUInt16(bufferBytes, 0);
                 UInt32 fileSize = BitConverter.ToUInt32(bufferBytes, 4);
                 UInt32 totalSize = fileSize + headerSize;
-
-                Console.WriteLine("{0}: [BNCS] Starting BNFTP download",m_owner.Account);
+                if (ClientlessBot.debugging)
+                    Console.WriteLine("{0}: [BNCS] Starting BNFTP download",m_owner.Account);
 
                 do
                 {
@@ -447,8 +449,8 @@ namespace CSharpClient
                         break;
 
                 } while (buffer.Count < totalSize);
-
-                Console.WriteLine("{0}: [BNCS] Finished BNFTP download",m_owner.Account);
+                if (ClientlessBot.debugging)
+                    Console.WriteLine("{0}: [BNCS] Finished BNFTP download",m_owner.Account);
 
                 ftpstream.Close();
                 bnftp.Close();
@@ -514,7 +516,7 @@ namespace CSharpClient
         {
             switch (result)
             {
-                case 0x000: Console.WriteLine("{0}: [BNCS] Successfully logged on to Battle.net", m_owner.Account);
+                case 0x000: if (ClientlessBot.debugging) Console.WriteLine("{0}: [BNCS] Successfully logged on to Battle.net", m_owner.Account);
                     break;
                 case 0x100: Console.WriteLine("{0}: [BNCS] Outdated game version", m_owner.Account);
                     break;
