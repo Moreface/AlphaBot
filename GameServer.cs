@@ -176,9 +176,20 @@ namespace CSharpClient
             }
         }
 
+        public static bool BitScanReverse(out int index, ulong mask)
+        {
+            index = 0;
+            while (mask > 1)
+            {
+                mask >>= 1;
+                index++;
+            }
+            return mask == 1;
+        }
+
         protected void NpcAssignment(byte type, List<byte> data)
         {
-            
+               
             byte[] packet = data.ToArray();
             NpcEntity output;
             try
@@ -210,7 +221,7 @@ namespace CSharpClient
 
                 if (data.Count > 0x10)
                 {
-                    br.ReadBitsLittleEndian(4);
+                    br.Read(4);
                     if (br.ReadBit())
                     {
                         for (int i = 0; i < informationLength; i++)
@@ -219,12 +230,18 @@ namespace CSharpClient
                             int value = Int32.Parse(entries[i]);
                             if (value > 2)
                             {
+                                int temp;
+
+                                BitScanReverse(out temp, (uint)value - 1);
+
                                 bitCount = (int)Math.Ceiling(Math.Log((double)value) / Math.Log(2.0));
                             }
                             else
+                            {
                                 bitCount = 1;
+                            }
 
-                            int bits = br.ReadBitsLittleEndian(bitCount);
+                            int bits = br.Read(bitCount);
                         }
                     }
 
@@ -238,6 +255,7 @@ namespace CSharpClient
                         output.SuperUnique = br.ReadBit();
                         output.IsMinion = br.ReadBit();
                         output.Ghostly = br.ReadBit();
+                        Console.WriteLine("{0} {1} {2} {3} {4}", output.Champion, output.Unique, output.SuperUnique, output.IsMinion, output.Ghostly);
                     }
 
                     if (output.SuperUnique)
@@ -343,7 +361,8 @@ namespace CSharpClient
             String name = System.Text.Encoding.ASCII.GetString(packet, offset, 15);
             if (name.Substring(0, m_owner.Me.Name.Length) == m_owner.BotGameData.Me.Name)
             {
-                Console.WriteLine("{0}: [D2GS] Received new portal id", m_owner.Account);
+                if(ClientlessBot.debugging)
+                    Console.WriteLine("{0}: [D2GS] Received new portal id", m_owner.Account);
                 m_owner.BotGameData.Me.PortalId = BitConverter.ToUInt32(packet, 21);
             }
         }
@@ -561,7 +580,8 @@ namespace CSharpClient
 
         protected void LoadActData(byte type, List<byte> data)
         {
-            Console.WriteLine("{0}: [D2GS] Loading Act Data", m_owner.Account);
+            if (ClientlessBot.debugging)
+                Console.WriteLine("{0}: [D2GS] Loading Act Data", m_owner.Account);
             m_owner.BotGameData.CurrentAct = (GameData.ActType)data[1];
             m_owner.BotGameData.MapId = BitConverter.ToInt32(data.ToArray(), 2);
             m_owner.BotGameData.AreaId = BitConverter.ToInt32(data.ToArray(), 6);
@@ -574,10 +594,10 @@ namespace CSharpClient
 
         protected void StartPingThread(byte type, List<byte> data)
         {
-            //if (ClientlessBot.debugging)
-            Console.WriteLine("{0}: [D2GS] Game is done loading. Joining Game", m_owner.Account);
+            if (ClientlessBot.debugging)
+                Console.WriteLine("{0}: [D2GS] Game is done loading. Joining Game", m_owner.Account);
             m_stream.WriteByte(0x6b);
-            //if (ClientlessBot.debugging)
+            if (ClientlessBot.debugging)
                 Console.WriteLine("{0}: [D2GS] Starting Ping Thread", m_owner.Account);
 
             PingStart();
@@ -585,7 +605,7 @@ namespace CSharpClient
    
         protected void GameFlagsPing(byte type, List<byte> data)
         {
-            //if (ClientlessBot.debugging)
+            if (ClientlessBot.debugging)
                  Console.WriteLine("{0}: [D2GS] Game is loading, please wait...", m_owner.Account);
             List<byte> packet = new List<byte>();
             packet.Add(0x6d);
