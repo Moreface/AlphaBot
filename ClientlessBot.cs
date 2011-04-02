@@ -22,6 +22,8 @@ using System.Text;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using System.IO;
+using System.Xml.Serialization;
 
 namespace CSharpClient
 {
@@ -54,6 +56,9 @@ namespace CSharpClient
             STATUS_KILLING_ELDRITCH,
             STATUS_NOT_IN_GAME
         };
+
+        private Object m_itemListLock;
+        public Object ItemListLock { get { return m_itemListLock; } set { m_itemListLock = value; } }
 
         protected GameData m_gameData;
         public GameData BotGameData { get { return m_gameData; } } 
@@ -196,6 +201,20 @@ namespace CSharpClient
 	        }
         }
 
+        protected static List<ItemType> m_pickitList = new List<ItemType>();
+
+        protected static void InitializePickit()
+        {
+            FileStream fs = new FileStream("pickit.xml", FileMode.Open);
+            XmlSerializer x = new XmlSerializer(typeof(List<ItemType>));
+            m_pickitList = (List<ItemType>)x.Deserialize(fs);
+
+            foreach (ItemType i in m_pickitList)
+            {
+                Console.WriteLine("{0}: {1}, {2}, Ethereal:{3}, {4}", i.name, i.type, i.quality, i.ethereal, i.sockets);
+            }
+        }
+
         /*
          * 
          * In Game API
@@ -309,6 +328,23 @@ namespace CSharpClient
 
         public virtual void Pickit()
         {
+            var picking_items = (from i in BotGameData.Items
+                                 where i.Value.ground select i.Value);
+
+            var intr = picking_items.Intersect(m_pickitList,new ItemEntryComparer());
+            foreach (var i in intr)
+            {
+                Console.WriteLine("{0}: {1}, {2}, Ethereal:{3}, {4}", i.name, i.type, i.quality, i.ethereal, i.sockets);
+                if (BotGameData.Belt.m_items.Count >= 16 && i.type == "rv1")
+                    continue;
+
+                SwitchSkill((uint)Skills.Type.teleport);
+                Thread.Sleep(200);
+                CastOnCoord((ushort)i.x, (ushort)i.y);
+                Thread.Sleep(400);
+                SendPacket(0x16, new byte[] { 0x04, 0x00, 0x00, 0x00 }, BitConverter.GetBytes(i.id), GenericServerConnection.nulls);
+                Thread.Sleep(500);
+            }
 
         }
 
@@ -414,7 +450,43 @@ namespace CSharpClient
 
         public virtual void StashItems()
         {
+            bool onCursor = false;
+            List<ItemType> items;
+            lock (ItemListLock)
+            {
+                 items = new List<ItemType>(BotGameData.Items.Values);
+            }
+            foreach (ItemType i in items)
+            {
+                onCursor = false;
 
+                if (i.action == (uint)ItemType.item_action_type.to_cursor)
+                    onCursor = true;
+                else if (i.container == ItemType.ItemContainerType.inventory)
+                    onCursor = false;
+                else
+                    continue;
+
+                if (i.type == "tbk" || i.type == "cm1" || i.type == "cm2")
+                    continue;
+
+                Coordinate stashLocation;
+                if (!BotGameData.Stash.FindFreeSpace(i, out stashLocation))
+                {
+                    continue;
+                }
+
+                Console.WriteLine("{0}: [D2GS] Stashing item {1}, at {2}, {3}", Account, i.name, stashLocation.X, stashLocation.Y);
+
+                if (!onCursor)
+                {
+                    SendPacket(0x19, BitConverter.GetBytes((UInt32)i.id));
+                    Thread.Sleep(500);
+                }
+
+                SendPacket(0x18, BitConverter.GetBytes((UInt32)i.id), BitConverter.GetBytes((UInt32)stashLocation.X), BitConverter.GetBytes((UInt32)stashLocation.Y), new byte[] { 0x04, 0x00, 0x00, 0x00 });
+                Thread.Sleep(400);
+            }
         }
 
         public void SwitchSkill(uint skill)
@@ -545,6 +617,7 @@ namespace CSharpClient
             m_mcpThread = new Thread(m_mcp.ThreadFunction);
             m_gameData = new GameData();
             m_gameCreationThread = new Thread(CreateGameThreadFunction);
+            m_itemListLock = new Object();
         }
 
 
