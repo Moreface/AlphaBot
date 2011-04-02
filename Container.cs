@@ -76,7 +76,7 @@ namespace CSharpClient
             m_items.Remove(item);
         }
 
-        UInt32 NumberFields()
+        public UInt32 NumberFields()
         {
             UInt32 i = 0;
 	        for (Int32 y = 0; y < m_height; y++) {
@@ -88,7 +88,7 @@ namespace CSharpClient
 	        return i;
         }
 
-        Boolean FindFreeSpace(ItemType item, out Coordinate output)
+        public Boolean FindFreeSpace(ItemType item, out Coordinate output)
         {
         	Int32 item_width = item.width;
 	        Int32 item_height = item.height;
@@ -107,7 +107,7 @@ namespace CSharpClient
 	        return false;
         }
 
-        Boolean FindFreeSpace(ItemType item)
+        public Boolean FindFreeSpace(ItemType item)
         {
             Coordinate output;
             return FindFreeSpace(item, out output);
