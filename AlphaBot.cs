@@ -23,20 +23,6 @@ namespace CSharpClient
         protected Entity m_redPortal, m_harrogathWp, m_act1Wp;
         protected Thread m_botThread;
 
-        protected static List<ItemType> m_pickitList = new List<ItemType>();
-
-        protected static void InitializePickit()
-        {
-            FileStream fs = new FileStream("pickit.xml", FileMode.Open);
-            XmlSerializer x = new XmlSerializer(typeof(List<ItemType>));
-            m_pickitList = (List<ItemType>)x.Deserialize(fs);
-
-            foreach (ItemType i in m_pickitList)
-            {
-                Console.WriteLine("{0}: {1}, {2}, Ethereal:{3}, {4}", i.name, i.type, i.quality, i.ethereal,i.sockets);
-            }
-        }
-
         public override void ReceivedGameServerPacket(List<byte> data)
         {
             byte[] packet = data.ToArray();
