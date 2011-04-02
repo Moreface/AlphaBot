@@ -42,8 +42,7 @@ namespace CSharpClient
             byte[] packet = data.ToArray();
             switch (packet[0])
             {
-                case D2GS_WORLDOBJECT: // Assigns objects (shrines, portals, torches, stash, chests...)
-                    //data_pointer = packet.c_str();
+                case D2GS_WORLDOBJECT:
                     if (packet[1] == 0x02)
                     {
                         UInt32 obj = BitConverter.ToUInt16(packet, 6);
@@ -316,8 +315,14 @@ namespace CSharpClient
         {
             DataManager dm = new DataManager("data\\");
             AlphaBot.InitializePickit();
-            AlphaBot cb = new AlphaBot(true,false,false,dm, "useast.battle.net", args[0], args[1], args[2], args[3], 200, 100, "data\\", GameDifficulty.NIGHTMARE, "xa1");
-            cb.Start();
+             AlphaBot cb;
+             if (args.Length < 4)
+                 Console.WriteLine("Must supply command line args");
+             else
+             {
+                 cb = new AlphaBot(true, false, false, dm, "useast.battle.net", args[0], args[1], args[2], args[3], 200, 100, "data\\", GameDifficulty.NIGHTMARE, "xa1");
+                 cb.Start();
+             }
             Console.ReadKey();
             return;
         }
