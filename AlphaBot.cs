@@ -195,8 +195,8 @@ namespace CSharpClient
                 Thread.Sleep(300);
                 CastOnCoord(10058, 13236);
                 Thread.Sleep(300);
-
-                Console.WriteLine("Current Position: ({0},{1})", Me.Location.X, Me.Location.Y);
+                if (ClientlessBot.debugging)
+                    Console.WriteLine("Current Position: ({0},{1})", Me.Location.X, Me.Location.Y);
                 /*
                 NpcEntity pindle = GetNpc("Pindleskin");
                 if (pindle == default(NpcEntity))
@@ -281,8 +281,8 @@ namespace CSharpClient
         public override void BotThreadFunction()
         {
             Int32 startTime = Time();
-            
-            Console.WriteLine("{0}: [D2GS] Bot is in town.", Account);
+            if (ClientlessBot.debugging)
+                Console.WriteLine("{0}: [D2GS] Bot is in town.", Account);
 
             Thread.Sleep(500);
 
@@ -297,6 +297,8 @@ namespace CSharpClient
            
             FailedGame = false;
             LeaveGame();
+            Int32 endTime = Time() - startTime;
+            Console.WriteLine("{0}: [BOT] Run took {1} seconds.", Account, endTime);
         }   
 
         public AlphaBot(bool pindle, bool eld, bool shenk, DataManager dm, String bnetServer, String account, String password, String classicKey, String expansionKey, uint potlife, uint chickenlife, String binaryDirectory, GameDifficulty difficulty, String gamepass) :
