@@ -74,6 +74,7 @@
     <Compile Include="GameData.cs" />
     <Compile Include="GameServer.cs" />
     <Compile Include="GenericServerConnection.cs" />
+    <Compile Include="ItemEntryComparer.cs" />
     <Compile Include="ItemType.cs" />
     <Compile Include="NpcEntity.cs" />
     <Compile Include="Player.cs" />
