@@ -213,11 +213,6 @@ namespace CSharpClient
 				m_owner.GsHash = data.GetRange(13, 4);
 				m_owner.GsToken = data.GetRange(5, 2);
 
-                //byte[] packeta = m_owner.m_bncs.BuildPacket(0x22, System.Text.Encoding.ASCII.GetBytes(lod_id), BitConverter.GetBytes((UInt32)0xd), System.Text.Encoding.ASCII.GetBytes(m_owner.GameName), zero, System.Text.Encoding.ASCII.GetBytes(m_owner.GamePassword), zero);
-                //m_owner.m_bncs.Write(packeta);
-                //byte[] packetb = m_owner.m_bncs.BuildPacket(0x10);
-				//m_owner.m_bncs.Write(packetb);
-
                 m_owner.StartGameServerThread();
 			}
         }
@@ -306,7 +301,8 @@ namespace CSharpClient
                             break;
                     }
 
-                    Console.WriteLine("{0}: [MCP] {1}. {2}, Level: {3}, {6} ({4}|{5})", m_owner.Account, i, characterName, level, coreString, versionString, classType);
+                    if (ClientlessBot.debugging)
+                        Console.WriteLine("{0}: [MCP] {1}. {2}, Level: {3}, {6} ({4}|{5})", m_owner.Account, i, characterName, level, coreString, versionString, classType);
 
                     if (m_owner.Character == null && i == 1)
                     {
@@ -321,7 +317,8 @@ namespace CSharpClient
                     }
                 }
                 if (selectFirstCharacter)
-                    Console.WriteLine("{0}: [MCP] No character specified, chose first character", m_owner.Account);
+                    if (ClientlessBot.debugging)
+                        Console.WriteLine("{0}: [MCP] No character specified, chose first character", m_owner.Account);
                 if (!foundCharacter)
                 {
                     Console.WriteLine("{0}: [MCP] Unable to locate character specified", m_owner.Account);
@@ -361,7 +358,8 @@ namespace CSharpClient
 
             if (!m_owner.LoggedIn)
             {
-                Console.WriteLine("{0}: [MCP] Requesting Character list...", m_owner.Account);
+                if (ClientlessBot.debugging)
+                    Console.WriteLine("{0}: [MCP] Requesting Character list...", m_owner.Account);
                 byte[] packet = BuildPacket(0x19, BitConverter.GetBytes(8));
                 m_stream.Write(packet, 0, packet.Length);
             }
@@ -375,7 +373,8 @@ namespace CSharpClient
 
         protected void VoidRequest(byte type, List<byte> data)
         {
-            Console.WriteLine("{0}: [MCP] Unknown Packet Received... Ignoring packet type: {1:X} ...", m_owner.Account,type);
+            if (ClientlessBot.debugging)
+                Console.WriteLine("{0}: [MCP] Unknown Packet Received... Ignoring packet type: 0x{1:X2} ...", m_owner.Account,type);
         }
 
         public override void ThreadFunction()
