@@ -24,11 +24,13 @@ using System.Net.Sockets;
 using System.Threading;
 using System.IO;
 using System.Xml.Serialization;
+using System.Linq.Expressions;
 
 namespace CSharpClient
 {
     class ClientlessBot : IDisposable
     {
+        #region Statics
         public static bool debugging = false;
 
         public enum GameDifficulty
@@ -56,7 +58,9 @@ namespace CSharpClient
             STATUS_KILLING_ELDRITCH,
             STATUS_NOT_IN_GAME
         };
+        #endregion
 
+        #region Members
         private Object m_itemListLock;
         public Object ItemListLock { get { return m_itemListLock; } set { m_itemListLock = value; } }
 
@@ -161,25 +165,31 @@ namespace CSharpClient
         protected Thread m_gsThread;
 
         public Player Me { get { return BotGameData.Me; } }
+        #endregion
 
         public void DetermineCharacterSkillSetup()
         {
+            
             if (Me.Class == GameData.CharacterClassType.SORCERESS) {
-		        if (BotGameData.SkillLevels[Skills.Type.blizzard] >= 15 && BotGameData.SkillLevels[Skills.Type.glacial_spike] >= 8 && BotGameData.SkillLevels[Skills.Type.ice_blast] >= 8) {
-			        Console.WriteLine("{0}: [D2GS] Using Blizzard/Glacial Spike/Ice Blast Sorceress setup.",Account);
-			        BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.SORCERESS_BLIZZARD;
-		        } else if (BotGameData.SkillLevels[Skills.Type.meteor] >= 15 && BotGameData.SkillLevels[Skills.Type.fire_ball] >= 15 && BotGameData.SkillLevels[Skills.Type.frozen_orb] == 0) {
-			        Console.WriteLine("{0}: [D2GS] Using Meteor/Fireball Sorceress setup.",Account);
-			        BotGameData.CharacterSkillSetup =GameData.CharacterSkillSetupType.SORCERESS_METEOR;
-		        } else if (BotGameData.SkillLevels[Skills.Type.lightning] >= 15 || BotGameData.SkillLevels[Skills.Type.chain_lightning] >= 15) {
-			        Console.WriteLine("{0}: [D2GS] Using Lightning/Chain Lightning Sorceress setup" ,Account);
-			        BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.SORCERESS_LIGHTNING;
-		        } else if (BotGameData.SkillLevels[Skills.Type.fire_ball] >= 15 && BotGameData.SkillLevels[Skills.Type.frozen_orb] >= 15) {
-			        Console.WriteLine("{0}: [D2GS] Using Meteorb Sorceress setup",Account);
-			        BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.SORCERESS_METEORB;
-		        } else {
-			        Console.WriteLine("Unknown Sorceress skill setup");
-			        BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.UNKNOWNSETUP;
+                try{
+		            if (BotGameData.SkillLevels[Skills.Type.lightning] >= 15 || BotGameData.SkillLevels[Skills.Type.chain_lightning] >= 15) {
+			            Console.WriteLine("{0}: [D2GS] Using Lightning/Chain Lightning Sorceress setup" ,Account);
+			            BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.SORCERESS_LIGHTNING;
+                    }
+                }
+                catch
+                {
+                    try
+                    {
+                        if (BotGameData.SkillLevels[Skills.Type.blizzard] >= 15 && BotGameData.SkillLevels[Skills.Type.glacial_spike] >= 8 && BotGameData.SkillLevels[Skills.Type.ice_blast] >= 8) {
+			                Console.WriteLine("{0}: [D2GS] Using Blizzard/Glacial Spike/Ice Blast Sorceress setup.",Account);
+                            BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.SORCERESS_BLIZZARD;
+		                }
+                    } 
+                    catch
+                    {
+
+                    }
 		        }
 	        } else if (Me.Class == GameData.CharacterClassType.PALADIN) {
                 if (BotGameData.SkillLevels[Skills.Type.blessed_hammer] >= 15 && BotGameData.SkillLevels[Skills.Type.concentration] >= 15) {
@@ -201,7 +211,29 @@ namespace CSharpClient
 	        }
         }
 
+        #region Pickit Initialization
+        protected delegate bool PickTest(ItemType x);
+
+        protected static PickTest AddPickTest(PickTest x, PickTest newTest)
+        {
+            return delegate(ItemType item) 
+            {
+                return (x(item) || newTest(item));
+            };
+        }
+
+        protected static PickTest CreatePickTest(ItemType x)
+        {
+            return delegate(ItemType item)
+            {
+                return item.quality == x.quality;
+            };
+        }
+
+        protected static Dictionary<String, PickTest> m_pickitMap = new Dictionary<string, PickTest>();
+
         protected static List<ItemType> m_pickitList = new List<ItemType>();
+
 
         protected static void InitializePickit()
         {
@@ -212,8 +244,60 @@ namespace CSharpClient
             foreach (ItemType i in m_pickitList)
             {
                 Console.WriteLine("{0}: {1}, {2}, Ethereal:{3}, {4}", i.name, i.type, i.quality, i.ethereal, i.sockets);
+                if (!m_pickitMap.ContainsKey(i.type))
+                {
+                    m_pickitMap.Add(i.type, CreatePickTest(i));
+                }
+                else
+                {
+                    m_pickitMap[i.type] = AddPickTest(m_pickitMap[i.type], CreatePickTest(i));
+                }
             }
+            fs.Close();
         }
+
+        protected static void TestPickit()
+        {
+            ItemType item1 = new ItemType();
+            item1.type = "gld";
+
+            ItemType item2 = new ItemType();
+            item2.type = "rvl";
+
+            ItemType item3 = new ItemType();
+            item3.type = "r33";
+
+            ItemType item4 = new ItemType();
+            item4.type = "oba";
+            item4.quality = ItemType.ItemQualityType.unique;
+
+            ItemType item5 = new ItemType();
+            item5.type = "oba";
+            item5.quality = ItemType.ItemQualityType.set;
+
+            List<ItemType> items = new List<ItemType>();
+
+            items.Add(item1);
+            items.Add(item2);
+            items.Add(item3);
+            items.Add(item4);
+            items.Add(item5);
+            foreach (ItemType i in items)
+            {
+                if (!m_pickitMap.ContainsKey(i.type) && i.type != "rvl" && i.type != "gld")
+                    break;
+
+                if (m_pickitMap[i.type](i) )
+                {
+                    Console.WriteLine("Picking up Item!");
+                    Console.WriteLine("{0}: {1}, {2}, Ethereal:{3}, {4}", i.name, i.type, i.quality, i.ethereal, i.sockets);
+                }
+            }
+
+            Console.ReadKey();
+        }
+
+        #endregion
 
         /*
          * 
@@ -331,21 +415,46 @@ namespace CSharpClient
             var picking_items = (from i in BotGameData.Items
                                  where i.Value.ground select i.Value);
 
-            var intr = picking_items.Intersect(m_pickitList,new ItemEntryComparer());
-            foreach (var i in intr)
+            lock (m_itemListLock)
             {
-                Console.WriteLine("{0}: {1}, {2}, Ethereal:{3}, {4}", i.name, i.type, i.quality, i.ethereal, i.sockets);
-                if (BotGameData.Belt.m_items.Count >= 16 && i.type == "rv1")
-                    continue;
-
-                SwitchSkill((uint)Skills.Type.teleport);
-                Thread.Sleep(200);
-                CastOnCoord((ushort)i.x, (ushort)i.y);
-                Thread.Sleep(400);
-                SendPacket(0x16, new byte[] { 0x04, 0x00, 0x00, 0x00 }, BitConverter.GetBytes(i.id), GenericServerConnection.nulls);
-                Thread.Sleep(500);
+                foreach (var i in picking_items)
+                {
+                    Console.WriteLine("{0}: {1}, {2}, Ethereal:{3}, {4}", i.name, i.type, i.quality, i.ethereal, i.sockets);
+                }
+                try
+                {
+                    foreach (var i in picking_items)
+                    {
+                        if (!m_pickitMap.ContainsKey(i.type))
+                            continue;
+                        if (BotGameData.Belt.m_items.Count >= 16 && i.type == "rvl")
+                            continue;
+                        if (m_pickitMap[i.type](i))
+                        {
+                            Console.WriteLine("Picking up Item!");
+                            Console.WriteLine("{0}: {1}, {2}, Ethereal:{3}, {4}", i.name, i.type, i.quality, i.ethereal, i.sockets);
+                            SwitchSkill(0x36);
+                            Thread.Sleep(200);
+                            CastOnCoord((ushort)i.x, (ushort)i.y);
+                            Thread.Sleep(400);
+                            byte[] tempa = { 0x04, 0x00, 0x00, 0x00 };
+                            SendPacket(0x16, tempa, BitConverter.GetBytes((Int32)i.id), GenericServerConnection.nulls);
+                            Thread.Sleep(500);
+                            if (i.type != "rvl" && i.type != "gld")
+                            {
+                                using (StreamWriter sw = File.AppendText("log.txt"))
+                                {
+                                    sw.WriteLine("{0}: {1}, {2}, Ethereal:{3}, {4}", i.name, i.type, i.quality, i.ethereal, i.sockets);
+                                }	
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    Console.WriteLine("Failed to pickup items, something bad happened");
+                }
             }
-
         }
 
         public void CastOnCoord(UInt16 x, UInt16 y)
@@ -489,12 +598,13 @@ namespace CSharpClient
             }
         }
 
-        public void SwitchSkill(uint skill)
+        public bool SwitchSkill(uint skill)
         {
             BotGameData.RightSkill = skill;
             byte[] temp = {0xFF, 0xFF, 0xFF , 0xFF };
             SendPacket(0x3c, BitConverter.GetBytes(skill), temp);
             Thread.Sleep(100);
+            return true;
         }
 
         public bool TalkToHealer(UInt32 id)
@@ -569,18 +679,19 @@ namespace CSharpClient
             return true;
         }
 
-        public virtual void UsePotion()
+        public virtual bool UsePotion()
         {
             ItemType pot = (from n in BotGameData.Belt.m_items 
-                    where n.type == "rv1" select n).FirstOrDefault();
+                    where n.type == "rvl" select n).FirstOrDefault();
 
             if (pot == default(ItemType))
             {
                 Console.WriteLine("{0}: [D2GS] No potions found in belt!", Account);
-                return;
+                return false;
             }
             SendPacket(0x26, BitConverter.GetBytes(pot.id), GenericServerConnection.nulls, GenericServerConnection.nulls);
             BotGameData.Belt.m_items.Remove(pot);
+            return true;
         }
 
         public void WeaponSwap()
@@ -588,12 +699,20 @@ namespace CSharpClient
 
         }
 
-        /*
-         * 
-         * Constructor
-         * 
-         * 
-         */
+        #region EventHandler
+        public delegate bool GameEvent();
+
+        protected PriorityQueue<byte, GameEvent> m_eventQueue;
+
+        public void AddNewEvent(byte priority, GameEvent newEvent)
+        {
+            //m_eventQueue.Enqueue(priority, newEvent);
+        }
+
+        #endregion
+
+
+        #region Constructors
         public ClientlessBot(DataManager dm, String bnetServer, String account, String password, String classicKey, String expansionKey, uint potlife, uint chickenlife, String binaryDirectory, GameDifficulty difficulty, String gamepass)
         {
             m_battleNetServer = bnetServer;
@@ -633,7 +752,9 @@ namespace CSharpClient
             m_gameData = new GameData();
             m_gameCreationThread = new Thread(CreateGameThreadFunction);
         }
+        #endregion
 
+        #region Thread Starters
         public void StartMcpThread()
         {
             m_mcpThread.Start();
@@ -651,6 +772,7 @@ namespace CSharpClient
             m_gsThread = new Thread(m_gs.ThreadFunction);
             m_gsThread.Start();
         }
+        #endregion
 
         public void InitializeGameData()
         {

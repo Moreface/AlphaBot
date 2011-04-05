@@ -49,19 +49,15 @@ namespace CSharpClient
         public override byte[] BuildPacket(byte command, params IEnumerable<byte>[] args)
         {
             List<byte> packet = new List<byte>();
+            packet.Add((byte)command);
 
             List<byte> packetArray = new List<byte>();
             foreach (IEnumerable<byte> a in args)
-            {
                 packetArray.AddRange(a);
-            }
 
-            packet.Add((byte)command);
             packet.AddRange(packetArray);
 
-            byte[] bytes = new byte[packet.Count];
-            packet.CopyTo(bytes);
-            return bytes;
+            return packet.ToArray();
         }
 
         public GameServer(ClientlessBot cb) : base(cb)
@@ -161,6 +157,7 @@ namespace CSharpClient
                 {
                     case ItemType.ItemContainerType.inventory:
                         m_owner.BotGameData.Inventory.Add(item);
+                        Console.WriteLine("New Item in Inventory!");
                         break;
                     case ItemType.ItemContainerType.cube:
                         m_owner.BotGameData.Cube.Add(item);
@@ -199,16 +196,16 @@ namespace CSharpClient
                
             byte[] packet = data.ToArray();
             NpcEntity output;
-            try
-            {
+            //try
+            //{
                 BitReader br = new BitReader(data.ToArray());
                 br.ReadBitsLittleEndian(8);
-                UInt32 id = (uint)br.ReadBitsLittleEndian(32);
-                UInt16 npctype = (ushort)br.ReadBitsLittleEndian(16);
-                UInt16 x = (ushort)br.ReadBitsLittleEndian(16);
-                UInt16 y = (ushort)br.ReadBitsLittleEndian(16);
-                byte life = (byte)br.ReadBitsLittleEndian(8);
-                byte size = (byte)br.ReadBitsLittleEndian(8);
+                UInt32 id = (uint)br.Read(32);
+                UInt16 npctype = (ushort)br.Read(16);
+                UInt16 x = (ushort)br.Read(16);
+                UInt16 y = (ushort)br.Read(16);
+                byte life = (byte)br.Read(8);
+                byte size = (byte)br.Read(8);
 
                 output = new NpcEntity(id, npctype, life, x, y);
                 
@@ -219,7 +216,7 @@ namespace CSharpClient
 
                 String[] entries;
 
-                if (!m_owner.m_dm.m_monsterFields.Get(type, out entries))
+                if (!m_owner.m_dm.m_monsterFields.Get(npctype, out entries))
                     Console.WriteLine("Failed to read monstats data for NPC of type {0}", type);
                 if(entries.Length != informationLength)
                     Console.WriteLine("Invalid monstats entry for NPC of type {0}", type);
@@ -233,22 +230,17 @@ namespace CSharpClient
                     {
                         for (int i = 0; i < informationLength; i++)
                         {
-                            int bitCount;
+                            int temp;
+                            
                             int value = Int32.Parse(entries[i]);
-                            if (value > 2)
-                            {
-                                int temp;
 
-                                BitScanReverse(out temp, (uint)value - 1);
+                            if (!BitScanReverse(out temp, (uint)value - 1))
+                                temp = 0;
+                            if (temp == 31)
+                                temp = 0;
 
-                                bitCount = (int)Math.Ceiling(Math.Log((double)value) / Math.Log(2.0));
-                            }
-                            else
-                            {
-                                bitCount = 1;
-                            }
-
-                            int bits = br.Read(bitCount);
+                            //Console.WriteLine("BSR: {0} Bitcount: {1}", temp+1, bitCount);
+                            int bits = br.Read(temp+1);
                         }
                     }
 
@@ -262,7 +254,7 @@ namespace CSharpClient
                         output.SuperUnique = br.ReadBit();
                         output.IsMinion = br.ReadBit();
                         output.Ghostly = br.ReadBit();
-                        Console.WriteLine("{0} {1} {2} {3} {4}", output.Champion, output.Unique, output.SuperUnique, output.IsMinion, output.Ghostly);
+                        //Console.WriteLine("{0} {1} {2} {3} {4}", output.Champion, output.Unique, output.SuperUnique, output.IsMinion, output.Ghostly);
                     }
 
                     if (output.SuperUnique)
@@ -310,12 +302,18 @@ namespace CSharpClient
                     //Console.WriteLine("NPC: {0}", name);
                 }
 
-                m_owner.BotGameData.Npcs.Add(id, output);
-            }
-            catch
-            {
+                NpcEntity tempnpc;
+                if (m_owner.BotGameData.Npcs.TryGetValue(id, out tempnpc))
+                    m_owner.BotGameData.Npcs[id] = output;
+                else
+                    m_owner.BotGameData.Npcs.Add(id, output);
 
-            }
+                
+           // }
+           // catch
+           // {
+            
+           // }
             
         }
 
@@ -344,7 +342,18 @@ namespace CSharpClient
                 if (plife <= m_owner.ChickenLife)
                 {
                     Console.WriteLine("{0}: [D2GS] Chickening with {1} left!", m_owner.Account, plife);
-                    m_owner.LeaveGame();
+                    m_owner.InGame = false;
+                    m_owner.ConnectedToGs = false;
+
+                    Console.WriteLine("{0}: [D2GS] Leaving the game.", m_owner.Account);
+                    Write(new byte[] {0x69});
+
+                    Thread.Sleep(500);
+
+                    if (m_pingThread.IsAlive)
+                        m_pingThread.Join();
+                    m_owner.Status = ClientlessBot.ClientStatus.STATUS_NOT_IN_GAME;
+                    Kill();
                 }
                 else if (plife <= m_owner.PotLife)
                 {
@@ -690,64 +699,83 @@ namespace CSharpClient
                     m_owner.Status = ClientlessBot.ClientStatus.STATUS_NOT_IN_GAME;
                     break;
                 }
-                
+
 
                 while (true)
                 {
-                    UInt16 receivedPacket = 0;
-                    if(buffer.Count >= 2)
-                        receivedPacket = BitConverter.ToUInt16(buffer.ToArray(),0);
-                    if (buffer.Count >= 2 && receivedPacket == (UInt16)0x01af)
+                    try
                     {
-                        //if (ClientlessBot.debugging)
+                        UInt16 receivedPacket = 0;
+                        if (buffer.Count >= 2)
+                            receivedPacket = BitConverter.ToUInt16(buffer.ToArray(), 0);
+                        if (buffer.Count >= 2 && receivedPacket == (UInt16)0x01af)
+                        {
+                            //if (ClientlessBot.debugging)
                             Console.WriteLine("{0}: [D2GS] Logging on to game server", m_owner.Account);
 
-                        byte[] temp = {0x50, 0xcc, 0x5d, 0xed, 
+                            byte[] temp = {0x50, 0xcc, 0x5d, 0xed, 
                                        0xb6, 0x19, 0xa5, 0x91};
 
-                        Int32 pad = 16 - m_owner.Character.Length;
+                            Int32 pad = 16 - m_owner.Character.Length;
 
-                        byte[] padding = new byte[pad];
-                        byte[] characterClass = { m_owner.ClassByte };
-                        byte[] joinpacket = BuildPacket(0x68, m_owner.GsHash, m_owner.GsToken, characterClass, BitConverter.GetBytes((UInt32)0xd), temp, zero, System.Text.Encoding.ASCII.GetBytes(m_owner.Character), padding);
-                        Write(joinpacket);
-                        Console.WriteLine("{0}: [D2GS] Join packet sent to server", m_owner.Account);
-                        buffer.RemoveRange(0, 2);
-                    }
+                            byte[] padding = new byte[pad];
+                            byte[] characterClass = { m_owner.ClassByte };
+                            byte[] joinpacket = BuildPacket(0x68, m_owner.GsHash, m_owner.GsToken, characterClass, BitConverter.GetBytes((UInt32)0xd), temp, zero, System.Text.Encoding.ASCII.GetBytes(m_owner.Character), padding);
+                            Write(joinpacket);
+                            Console.WriteLine("{0}: [D2GS] Join packet sent to server", m_owner.Account);
+                            buffer.RemoveRange(0, 2);
+                        }
 
-                    if (buffer.Count < 2 || (buffer[0] >= 0xF0 && buffer.Count < 3))
-                    {
-                        break;
-                    }
-
-                    Int32 headerSize;
-                    Int32 length = Huffman.GetPacketSize(buffer, out headerSize);
-                    if (length > buffer.Count)
-                        break;
-
-                    byte[] compressedPacket = buffer.GetRange(headerSize, length).ToArray();
-                    buffer.RemoveRange(0, length+headerSize);
-
-
-                    byte[] decompressedPacket;
-                    Huffman.Decompress(compressedPacket,out decompressedPacket);
-                    List<byte> packet = new List<byte>(decompressedPacket);
-                    while (packet.Count != 0)
-                    {
-                        Int32 packetSize;
-                        if(!GetPacketSize(packet,out packetSize))
+                        if (buffer.Count < 2 || (buffer[0] >= 0xF0 && buffer.Count < 3))
                         {
-                            Console.WriteLine("{0}: [D2GS] Failed to determine packet length",m_owner.Account);
                             break;
                         }
-                        List<byte> actualPacket = new List<byte>(packet.GetRange(0,packetSize));
-                        packet.RemoveRange(0, packetSize);
 
-                        byte identifier = actualPacket[0];
-                        DispatchPacket(identifier)(identifier, actualPacket);
-                        m_owner.ReceivedGameServerPacket(actualPacket);
+                        Int32 headerSize;
+                        Int32 length = Huffman.GetPacketSize(buffer, out headerSize);
+                        if (length > buffer.Count)
+                            break;
+
+                        byte[] compressedPacket = buffer.GetRange(headerSize, length).ToArray();
+                        buffer.RemoveRange(0, length + headerSize);
+
+
+                        byte[] decompressedPacket;
+                        Huffman.Decompress(compressedPacket, out decompressedPacket);
+                        List<byte> packet = new List<byte>(decompressedPacket);
+                        while (packet.Count != 0)
+                        {
+                            Int32 packetSize;
+                            if (!GetPacketSize(packet, out packetSize))
+                            {
+                                Console.WriteLine("{0}: [D2GS] Failed to determine packet length", m_owner.Account);
+                                break;
+                            }
+                            List<byte> actualPacket = new List<byte>(packet.GetRange(0, packetSize));
+                            packet.RemoveRange(0, packetSize);
+
+                            byte identifier = actualPacket[0];
+                            DispatchPacket(identifier)(identifier, actualPacket);
+                            m_owner.ReceivedGameServerPacket(actualPacket);
+                        }
                     }
-                }
+                    catch
+                    {
+                        m_owner.InGame = false;
+                        m_owner.ConnectedToGs = false;
+
+                        Console.WriteLine("{0}: [D2GS] Leaving the game.", m_owner.Account);
+                        Write(new byte[] { 0x69 });
+
+                        Thread.Sleep(500);
+
+                        if (m_pingThread.IsAlive)
+                            m_pingThread.Join();
+                        m_owner.Status = ClientlessBot.ClientStatus.STATUS_NOT_IN_GAME;
+                        Kill();
+                        return;
+                    }
+                }  
             }
         }
 

@@ -8,6 +8,7 @@ namespace CSharpClient
 {
     class ItemEntry
     {
+
         public String Name;
         public String Type;
         public ItemType.ItemClassificationType Classification;

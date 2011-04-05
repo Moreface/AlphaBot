@@ -182,7 +182,7 @@ namespace CSharpClient
                 Thread.Sleep(300);
                 if (ClientlessBot.debugging)
                     Console.WriteLine("Current Position: ({0},{1})", Me.Location.X, Me.Location.Y);
-                /*
+                
                 NpcEntity pindle = GetNpc("Pindleskin");
                 if (pindle == default(NpcEntity))
                 {
@@ -215,7 +215,7 @@ namespace CSharpClient
                     }
                 }
                 Console.WriteLine("{0}: [D2GS] {1} is dead. Killing minions", Account, pindle.Name);
-                 */
+                 
                 NpcEntity monster;
                 while (GetAliveNpc("Defiled Warrior", 20, out monster))
                 {
@@ -237,11 +237,11 @@ namespace CSharpClient
                 Console.WriteLine("{0}: [D2GS] Minions are dead, looting...", Account);
                 Pickit();
 
-                if (!TownPortal())
-                {
-                    LeaveGame();
-                    return;
-                }
+                //if (!TownPortal())
+                //{
+                    //LeaveGame();
+                    //return;
+                //}
             }
         }
 
@@ -301,12 +301,13 @@ namespace CSharpClient
         {
             DataManager dm = new DataManager("data\\");
             AlphaBot.InitializePickit();
+            AlphaBot.TestPickit();
              AlphaBot cb;
              if (args.Length < 4)
                  Console.WriteLine("Must supply command line args");
              else
              {
-                 cb = new AlphaBot(true, false, false, dm, "useast.battle.net", args[0], args[1], args[2], args[3], 200, 100, "data\\", GameDifficulty.NIGHTMARE, "xa1");
+                 cb = new AlphaBot(true, false, false, dm, "useast.battle.net", args[0], args[1], args[2], args[3], 300, 200, "data\\", GameDifficulty.HELL, "xa1");
                  cb.Start();
              }
             Console.ReadKey();

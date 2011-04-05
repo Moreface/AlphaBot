@@ -78,6 +78,7 @@
     <Compile Include="ItemType.cs" />
     <Compile Include="NpcEntity.cs" />
     <Compile Include="Player.cs" />
+    <Compile Include="PriorityQueue.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RealmServer.cs" />
     <Compile Include="Skills.cs" />

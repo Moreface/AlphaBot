@@ -27,8 +27,6 @@ namespace CSharpClient
             return ReadBitsLittleEndian(length);
         }
 
-
-
         public Int32 ReadBitsLittleEndian(int length)
         {
             int initialLen = length;

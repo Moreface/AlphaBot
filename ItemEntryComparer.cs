@@ -14,7 +14,14 @@ namespace CSharpClient
                 if (((i1.has_sockets == false) && (i2.has_sockets == false || i2.sockets == uint.MaxValue)) || i1.sockets == i2.sockets)
                     return true;
             }
-            if (i1.type == "rv1")
+            if (i1.type == "rvl")
+                return true;
+            if (i1.type == "gld")
+                return true;
+
+            if (i1.type == i2.type && i2.quality == ItemType.ItemQualityType.not_applicable)
+                return true;
+            if (i1.type == i2.type && i1.quality == ItemType.ItemQualityType.not_applicable)
                 return true;
             return false;
         }
