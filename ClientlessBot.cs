@@ -171,28 +171,16 @@ namespace CSharpClient
         {
             
             if (Me.Class == GameData.CharacterClassType.SORCERESS) {
-                try{
-		            if (BotGameData.SkillLevels[Skills.Type.lightning] >= 15 || BotGameData.SkillLevels[Skills.Type.chain_lightning] >= 15) {
-			            Console.WriteLine("{0}: [D2GS] Using Lightning/Chain Lightning Sorceress setup" ,Account);
-			            BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.SORCERESS_LIGHTNING;
-                    }
+		        if (BotGameData.SkillLevels.ContainsKey(Skills.Type.lightning) && BotGameData.SkillLevels[Skills.Type.lightning] >= 15 || BotGameData.SkillLevels.ContainsKey(Skills.Type.chain_lightning) && BotGameData.SkillLevels[Skills.Type.chain_lightning] >= 15) {
+			        Console.WriteLine("{0}: [D2GS] Using Lightning/Chain Lightning Sorceress setup" ,Account);
+			        BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.SORCERESS_LIGHTNING;
                 }
-                catch
-                {
-                    try
-                    {
-                        if (BotGameData.SkillLevels[Skills.Type.blizzard] >= 15 && BotGameData.SkillLevels[Skills.Type.glacial_spike] >= 8 && BotGameData.SkillLevels[Skills.Type.ice_blast] >= 8) {
-			                Console.WriteLine("{0}: [D2GS] Using Blizzard/Glacial Spike/Ice Blast Sorceress setup.",Account);
-                            BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.SORCERESS_BLIZZARD;
-		                }
-                    } 
-                    catch
-                    {
-
-                    }
+                else if (BotGameData.SkillLevels.ContainsKey(Skills.Type.blizzard) && BotGameData.SkillLevels[Skills.Type.blizzard] >= 15 && BotGameData.SkillLevels.ContainsKey(Skills.Type.glacial_spike) && BotGameData.SkillLevels[Skills.Type.glacial_spike] >= 8 && BotGameData.SkillLevels.ContainsKey(Skills.Type.ice_blast) && BotGameData.SkillLevels[Skills.Type.ice_blast] >= 8) {
+			            Console.WriteLine("{0}: [D2GS] Using Blizzard/Glacial Spike/Ice Blast Sorceress setup.",Account);
+                        BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.SORCERESS_BLIZZARD;
 		        }
 	        } else if (Me.Class == GameData.CharacterClassType.PALADIN) {
-                if (BotGameData.SkillLevels[Skills.Type.blessed_hammer] >= 15 && BotGameData.SkillLevels[Skills.Type.concentration] >= 15) {
+                if (BotGameData.SkillLevels.ContainsKey(Skills.Type.blessed_hammer) && BotGameData.SkillLevels[Skills.Type.blessed_hammer] >= 15 && BotGameData.SkillLevels.ContainsKey(Skills.Type.concentration) && BotGameData.SkillLevels[Skills.Type.concentration] >= 15) {
                     Console.WriteLine("{0}: [D2GS] Using Hammerdin Paladin setup.",Account);
                     BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.PALADIN_HAMMERDIN;
                 } else if (BotGameData.SkillLevels[Skills.Type.smite] >= 15 && BotGameData.SkillLevels[Skills.Type.fanaticism] >= 15) {
@@ -235,7 +223,7 @@ namespace CSharpClient
         protected static List<ItemType> m_pickitList = new List<ItemType>();
 
 
-        protected static void InitializePickit()
+        public static void InitializePickit()
         {
             FileStream fs = new FileStream("pickit.xml", FileMode.Open);
             XmlSerializer x = new XmlSerializer(typeof(List<ItemType>));
@@ -256,7 +244,7 @@ namespace CSharpClient
             fs.Close();
         }
 
-        protected static void TestPickit()
+        public static void TestPickit()
         {
             ItemType item1 = new ItemType();
             item1.type = "gld";
@@ -706,7 +694,12 @@ namespace CSharpClient
 
         public void AddNewEvent(byte priority, GameEvent newEvent)
         {
-            //m_eventQueue.Enqueue(priority, newEvent);
+            m_eventQueue.Enqueue(priority, newEvent);
+        }
+
+        public GameEvent GetNextEvent()
+        {
+            return m_eventQueue.Dequeue();
         }
 
         #endregion
@@ -715,6 +708,7 @@ namespace CSharpClient
         #region Constructors
         public ClientlessBot(DataManager dm, String bnetServer, String account, String password, String classicKey, String expansionKey, uint potlife, uint chickenlife, String binaryDirectory, GameDifficulty difficulty, String gamepass)
         {
+            m_eventQueue = new PriorityQueue<byte, GameEvent>();
             m_battleNetServer = bnetServer;
             m_account = account;
             m_password = password;
