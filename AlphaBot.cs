@@ -77,7 +77,11 @@ namespace CSharpClient
         public void VisitMalah()
         {
             NpcEntity malah = GetNpc("Malah");
-            TalkToTrader(malah.Id);
+            if (malah != null && malah != default(NpcEntity))
+                TalkToTrader(malah.Id);
+            else
+                LeaveGame();
+
             if (GetSkillLevel(Skills.Type.book_of_townportal) < 10)
             {
                 Thread.Sleep(300);
@@ -97,7 +101,8 @@ namespace CSharpClient
                 }
                 Thread.Sleep(500);
             }
-            SendPacket(0x30, GenericServerConnection.one, BitConverter.GetBytes(malah.Id));
+            if (malah != null && malah != default(NpcEntity)) 
+                SendPacket(0x30, GenericServerConnection.one, BitConverter.GetBytes(malah.Id));
             Thread.Sleep(300);
         }
 
@@ -137,7 +142,6 @@ namespace CSharpClient
 
         public void DoPindle()
         {
-            UInt32 id;
             UInt32 curLife = 0;
 
             if (Pindle)
@@ -219,6 +223,7 @@ namespace CSharpClient
                 NpcEntity monster;
                 while (GetAliveNpc("Defiled Warrior", 20, out monster))
                 {
+                    curLife = BotGameData.Npcs[monster.Id].Life;
                     Console.WriteLine("{0}: [D2GS] Killing Defiled Warrior", Account);
                     while (BotGameData.Npcs[monster.Id].Life > 0)
                     {
@@ -301,15 +306,14 @@ namespace CSharpClient
         {
             DataManager dm = new DataManager("data\\");
             AlphaBot.InitializePickit();
-            AlphaBot.TestPickit();
-             AlphaBot cb;
-             if (args.Length < 4)
-                 Console.WriteLine("Must supply command line args");
-             else
-             {
-                 cb = new AlphaBot(true, false, false, dm, "useast.battle.net", args[0], args[1], args[2], args[3], 300, 200, "data\\", GameDifficulty.HELL, "xa1");
-                 cb.Start();
-             }
+            AlphaBot cb;
+            if (args.Length < 4)
+                Console.WriteLine("Must supply command line args");
+            else
+            {
+                cb = new AlphaBot(true, false, false, dm, "useast.battle.net", args[0], args[1], args[2], args[3], 300, 200, "data\\", ClientlessBot.GameDifficulty.HELL, "xa1");
+                cb.Start();
+            }
             Console.ReadKey();
             return;
         }
