@@ -74,13 +74,16 @@ namespace CSharpClient
             }
         }
 
-        public void VisitMalah()
+        public bool VisitMalah()
         {
             NpcEntity malah = GetNpc("Malah");
             if (malah != null && malah != default(NpcEntity))
                 TalkToTrader(malah.Id);
             else
+            {
                 LeaveGame();
+                return false;
+            }
 
             if (GetSkillLevel(Skills.Type.book_of_townportal) < 10)
             {
@@ -101,12 +104,19 @@ namespace CSharpClient
                 }
                 Thread.Sleep(500);
             }
-            if (malah != null && malah != default(NpcEntity)) 
+            if (malah != null && malah != default(NpcEntity))
                 SendPacket(0x30, GenericServerConnection.one, BitConverter.GetBytes(malah.Id));
+            else
+            {
+                LeaveGame();
+                return false;
+            }
+
             Thread.Sleep(300);
+            return true;
         }
 
-        public void ReviveMerc()
+        public bool ReviveMerc()
         {
             if (!BotGameData.HasMerc)
             {
@@ -115,7 +125,13 @@ namespace CSharpClient
                 MoveTo(5060, 5076);
 
                 NpcEntity qual = GetNpc("Qual-Kehk");
-                TalkToTrader(qual.Id);
+                if (qual != null && qual != default(NpcEntity))
+                    TalkToTrader(qual.Id);
+                else
+                {
+                    LeaveGame();
+                    return false;
+                }
                 byte[] three = { 0x03, 0x00, 0x00, 0x00 };
                 SendPacket(0x38, three, BitConverter.GetBytes(qual.Id), GenericServerConnection.nulls);
                 Thread.Sleep(300);
@@ -130,6 +146,7 @@ namespace CSharpClient
                 MoveTo(5082, 5080);
                 MoveTo(5081, 5076);
             }
+            return true;
         }
 
         void EnterRedPortal()
@@ -151,7 +168,8 @@ namespace CSharpClient
                 MoveTo(5082, 5033);
                 MoveTo(5074, 5033);
 
-                VisitMalah();
+                if (!VisitMalah())
+                    return;
 
                 MoveTo(5073, 5032);
                 MoveTo(5073, 5044);
@@ -159,7 +177,8 @@ namespace CSharpClient
                 MoveTo(5081, 5065);
                 MoveTo(5081, 5076);
 
-                ReviveMerc();
+                if (!ReviveMerc())
+                    return;
 
                 MoveTo(5082, 5087);
                 MoveTo(5085, 5098);

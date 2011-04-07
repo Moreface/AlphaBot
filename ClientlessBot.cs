@@ -12,7 +12,7 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+    along with AlphaBot.  If not, see <http://www.gnu.org/licenses/>.
  */
 using System;
 using System.Collections.Generic;
@@ -353,7 +353,6 @@ namespace CSharpClient
             if (FailedGame)
             {
                 Console.WriteLine("{0}: [BNCS] Last game failed, sleeping.", Account);
-                //debug_log.write("[" + nil::timestamp() + "] Last game failed, sleeping.\n");
                 System.Threading.Thread.Sleep(30000);
             }
 
@@ -361,7 +360,6 @@ namespace CSharpClient
             FailedGame = true;
 
             Console.WriteLine("{0}: [MCP] Creating game \"{1}\" with password \"{2}\"", Account, GameName, GamePassword);
-            //debug_log.write("[" + nil::timestamp() + "] Creating game \"" + game_name + "\" with password \"" + game_password + "\"\n");
 
             byte[] temp = { 0x01, 0xff, 0x08 };
             byte[] packet = m_mcp.BuildPacket(0x03, BitConverter.GetBytes((UInt16)GameRequestId), BitConverter.GetBytes(Utils.GetDifficulty(Difficulty)), temp, System.Text.Encoding.ASCII.GetBytes(GameName), GenericServerConnection.zero,
