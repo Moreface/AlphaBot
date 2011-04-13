@@ -1,4 +1,4 @@
-﻿
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -224,7 +224,7 @@ namespace CSharpClient
                     LeaveGame();
                     return;
                 }
-                while (BotGameData.Npcs[pindle.Id].Life > 0)
+                while (BotGameData.Npcs[pindle.Id].Life > 0 && m_gs.m_socket.Connected)
                 {
                     if (!Attack(pindle.Id))
                     {
@@ -234,17 +234,17 @@ namespace CSharpClient
                     if (curLife > BotGameData.Npcs[pindle.Id].Life)
                     {
                         curLife = BotGameData.Npcs[pindle.Id].Life;
-                        Console.WriteLine("{0}: [D2GS] Pindleskins Life: {1}", Account, curLife);
+                        //Console.WriteLine("{0}: [D2GS] Pindleskins Life: {1}", Account, curLife);
                     }
                 }
                 Console.WriteLine("{0}: [D2GS] {1} is dead. Killing minions", Account, pindle.Name);
                  
                 NpcEntity monster;
-                while (GetAliveNpc("Defiled Warrior", 20, out monster))
+                while (GetAliveNpc("Defiled Warrior", 20, out monster) && m_gs.m_socket.Connected)
                 {
                     curLife = BotGameData.Npcs[monster.Id].Life;
                     Console.WriteLine("{0}: [D2GS] Killing Defiled Warrior", Account);
-                    while (BotGameData.Npcs[monster.Id].Life > 0)
+                    while (BotGameData.Npcs[monster.Id].Life > 0 && m_gs.m_socket.Connected)
                     {
                         if (!Attack(monster.Id))
                         {
@@ -254,7 +254,7 @@ namespace CSharpClient
                         if (curLife > BotGameData.Npcs[monster.Id].Life)
                         {
                             curLife = BotGameData.Npcs[monster.Id].Life;
-                            Console.WriteLine("{0}: [D2GS] Defiled Warriors Life: {1}", Account, curLife);
+                            //Console.WriteLine("{0}: [D2GS] Defiled Warriors Life: {1}", Account, curLife);
                         }
                     }
                 }
@@ -326,12 +326,14 @@ namespace CSharpClient
             DataManager dm = new DataManager("data");
             AlphaBot.InitializePickit();
             AlphaBot cb;
+            AlphaBot cb2;
+            AlphaBot cb3;
             if (args.Length < 4)
                 Console.WriteLine("Must supply command line args");
             else
             {
                 cb = new AlphaBot(true, false, false, dm, "useast.battle.net", args[0], args[1], args[2], args[3], 300, 200, "data", ClientlessBot.GameDifficulty.HELL, "xa1");
-                cb.Start();
+
             }
             Console.ReadKey();
             return;

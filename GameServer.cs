@@ -157,7 +157,7 @@ namespace CSharpClient
                 {
                     case ItemType.ItemContainerType.inventory:
                         m_owner.BotGameData.Inventory.Add(item);
-                        Console.WriteLine("New Item in Inventory!");
+                        //Console.WriteLine("New Item in Inventory!");
                         break;
                     case ItemType.ItemContainerType.cube:
                         m_owner.BotGameData.Cube.Add(item);
@@ -604,7 +604,8 @@ namespace CSharpClient
             if (!m_owner.BotGameData.FullyEnteredGame)
             {
                 m_owner.BotGameData.FullyEnteredGame = true;
-                Console.WriteLine("{0}: [D2GS] Fully Entered Game.", m_owner.Account);
+                if (ClientlessBot.debugging)
+                    Console.WriteLine("{0}: [D2GS] Fully Entered Game.", m_owner.Account);
             }
         }
 
@@ -634,7 +635,7 @@ namespace CSharpClient
 
         protected void GameLoading(byte type, List<byte> data)
         {
-            //if (ClientlessBot.debugging)
+            if (ClientlessBot.debugging)
                 Console.WriteLine("{0}: [D2GS] Game is loading, please wait...", m_owner.Account);
         }
 
@@ -679,7 +680,21 @@ namespace CSharpClient
                         buffer.AddRange(new List<byte>(byteBuffer).GetRange(0, bytesRead));
                     }
                     else
+                    {
+                        if (!m_socket.Connected)
+                        {
+                            if (m_owner.ConnectedToGs)
+                            {
+                                m_owner.ConnectedToGs = false;
+                                if (m_pingThread.IsAlive)
+                                    m_pingThread.Join();
+                                // Join threads
+                            }
+                            m_owner.Status = ClientlessBot.ClientStatus.STATUS_NOT_IN_GAME;
+                            break;
+                        }
                         Thread.Sleep(100);
+                    }
                     while (m_stream.DataAvailable)
                     {
                         buffer.Add((byte)m_stream.ReadByte());
@@ -710,8 +725,8 @@ namespace CSharpClient
                             receivedPacket = BitConverter.ToUInt16(buffer.ToArray(), 0);
                         if (buffer.Count >= 2 && receivedPacket == (UInt16)0x01af)
                         {
-                            //if (ClientlessBot.debugging)
-                            Console.WriteLine("{0}: [D2GS] Logging on to game server", m_owner.Account);
+                            if (ClientlessBot.debugging)
+                                Console.WriteLine("{0}: [D2GS] Logging on to game server", m_owner.Account);
 
                             byte[] temp = {0x50, 0xcc, 0x5d, 0xed, 
                                        0xb6, 0x19, 0xa5, 0x91};
@@ -722,7 +737,7 @@ namespace CSharpClient
                             byte[] characterClass = { m_owner.ClassByte };
                             byte[] joinpacket = BuildPacket(0x68, m_owner.GsHash, m_owner.GsToken, characterClass, BitConverter.GetBytes((UInt32)0xd), temp, zero, System.Text.Encoding.ASCII.GetBytes(m_owner.Character), padding);
                             Write(joinpacket);
-                            Console.WriteLine("{0}: [D2GS] Join packet sent to server", m_owner.Account);
+                            //Console.WriteLine("{0}: [D2GS] Join packet sent to server", m_owner.Account);
                             buffer.RemoveRange(0, 2);
                         }
 

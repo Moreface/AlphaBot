@@ -377,8 +377,8 @@ namespace CSharpClient
             switch (BotGameData.CharacterSkillSetup)
             {
                 case GameData.CharacterSkillSetupType.SORCERESS_LIGHTNING:
-                    if(BotGameData.RightSkill != (uint)Skills.Type.chain_lightning)
-                        SwitchSkill((uint)Skills.Type.chain_lightning);
+                    if(BotGameData.RightSkill != (uint)Skills.Type.lightning)
+                        SwitchSkill((uint)Skills.Type.lightning);
                     Thread.Sleep(300);
                     CastOnObject(id);
                     break;
@@ -405,7 +405,8 @@ namespace CSharpClient
             {
                 foreach (var i in picking_items)
                 {
-                    Console.WriteLine("{0}: {1}, {2}, Ethereal:{3}, {4}", i.name, i.type, i.quality, i.ethereal, i.sockets);
+                    if(i.type != "mp5" && i.type != "hp5" && i.type != "gld" && i.type != "rvl" && i.quality > ItemType.ItemQualityType.normal)
+                        Console.WriteLine("{0}: {1}, {2}, Ethereal:{3}, {4}", i.name, i.type, i.quality, i.ethereal, i.sockets);
                 }
                 try
                 {
@@ -417,8 +418,11 @@ namespace CSharpClient
                             continue;
                         if (m_pickitMap[i.type](i))
                         {
-                            Console.WriteLine("Picking up Item!");
-                            Console.WriteLine("{0}: {1}, {2}, Ethereal:{3}, {4}", i.name, i.type, i.quality, i.ethereal, i.sockets);
+                            if(i.type != "gld" && i.type != "rvl")
+                            {
+                                Console.WriteLine("Picking up Item!");
+                                Console.WriteLine("{0}: {1}, {2}, Ethereal:{3}, {4}", i.name, i.type, i.quality, i.ethereal, i.sockets);
+                            }
                             SwitchSkill(0x36);
                             Thread.Sleep(200);
                             CastOnCoord((ushort)i.x, (ushort)i.y);
@@ -430,7 +434,7 @@ namespace CSharpClient
                             {
                                 using (StreamWriter sw = File.AppendText("log.txt"))
                                 {
-                                    sw.WriteLine("{0}: {1}, {2}, Ethereal:{3}, {4}", i.name, i.type, i.quality, i.ethereal, i.sockets);
+                                    sw.WriteLine("[{5}] {0}: {1}, {2}, Ethereal:{3}, {4}", i.name, i.type, i.quality, i.ethereal, i.sockets == uint.MaxValue ? 0 : i.sockets, Account);
                                 }	
                             }
                         }
