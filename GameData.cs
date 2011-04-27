@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace CSharpClient
+namespace BattleNet
 {
     class GameData
     {
@@ -26,7 +26,7 @@ namespace CSharpClient
 
         public enum CharacterSkillSetupType
         {
-            UNKNOWNSETUP,
+            UNKNOWN_SETUP,
             SORCERESS_LIGHTNING,
             SORCERESS_METEOR,
             SORCERESS_ORB,
@@ -62,7 +62,7 @@ namespace CSharpClient
             ItemSkillLevels = new Dictionary<Skills.Type, uint>();
             Players = new Dictionary<uint,Player>();
             Npcs = new Dictionary<uint,NpcEntity>();
-            Items = new Dictionary<uint, ItemType>();
+            Items = new Dictionary<uint, Item>();
         }
         /*
          * 
@@ -113,8 +113,8 @@ namespace CSharpClient
         private Dictionary<UInt32, NpcEntity> m_npcs;
         public Dictionary<UInt32, NpcEntity> Npcs { get { return m_npcs; } set { m_npcs = value; } }
 
-        private Dictionary<UInt32, ItemType> m_items;
-        public Dictionary<UInt32, ItemType> Items { get { return m_items; } set { m_items = value; } }
+        private Dictionary<UInt32, Item> m_items;
+        public Dictionary<UInt32, Item> Items { get { return m_items; } set { m_items = value; } }
 
         private Container m_inventory;
         public Container Inventory { get { return m_inventory; } set { m_inventory = value; } }

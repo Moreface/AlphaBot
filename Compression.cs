@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace CSharpClient
+namespace BattleNet
 {
     public static class Huffman
     {

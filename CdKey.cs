@@ -20,11 +20,11 @@ using System.Linq;
 using System.Text;
 using System.Collections;
 
-namespace CSharpClient
+namespace BattleNet
 {
     class CdKey
     {
-        static byte[] alphaMap =
+        static readonly byte[] alphaMap =
 	    {
 		    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
 		    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,

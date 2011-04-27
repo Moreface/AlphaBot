@@ -4,14 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Xml.Serialization;
 
-namespace CSharpClient
+namespace BattleNet
 {
     class ItemEntry
     {
 
         public String Name;
         public String Type;
-        public ItemType.ItemClassificationType Classification;
+        public Item.ClassificationType Classification;
         public UInt32 Width, Height;
         public Boolean Stackable, Usable, Throwable;
 
@@ -19,33 +19,33 @@ namespace CSharpClient
         {
 
         }
-        public ItemEntry(String name, String type, ItemType.ItemClassificationType classification, UInt32 width, UInt32 height, Boolean stackable, Boolean usable, Boolean throwable)
+        public ItemEntry(String name, String type, Item.ClassificationType classification, UInt32 width, UInt32 height, Boolean stackable, Boolean usable, Boolean throwable)
         {
-            Name = name;
-            Type = type;
-            Classification = classification;
-            Width = width;
-            Height =height;
-            Stackable = stackable;
-            Usable = usable;
-            Throwable = throwable;
+            Name            = name;
+            Type            = type;
+            Classification  = classification;
+            Width           = width;
+            Height          = height;
+            Stackable       = stackable;
+            Usable          = usable;
+            Throwable       = throwable;
         }
 
         public Boolean IsArmor()
         {
             switch (Classification)
             {
-                case ItemType.ItemClassificationType.helm:
-                case ItemType.ItemClassificationType.armor:
-                case ItemType.ItemClassificationType.shield:
-                case ItemType.ItemClassificationType.gloves:
-                case ItemType.ItemClassificationType.boots:
-                case ItemType.ItemClassificationType.belt:
-                case ItemType.ItemClassificationType.druid_pelt:
-                case ItemType.ItemClassificationType.barbarian_helm:
-                case ItemType.ItemClassificationType.paladin_shield:
-                case ItemType.ItemClassificationType.necromancer_shrunken_head:
-                case ItemType.ItemClassificationType.circlet:
+                case Item.ClassificationType.helm:
+                case Item.ClassificationType.armor:
+                case Item.ClassificationType.shield:
+                case Item.ClassificationType.gloves:
+                case Item.ClassificationType.boots:
+                case Item.ClassificationType.belt:
+                case Item.ClassificationType.druid_pelt:
+                case Item.ClassificationType.barbarian_helm:
+                case Item.ClassificationType.paladin_shield:
+                case Item.ClassificationType.necromancer_shrunken_head:
+                case Item.ClassificationType.circlet:
                     return true;
             }
             return false;
@@ -54,41 +54,41 @@ namespace CSharpClient
         {
             switch (Classification)
             {           
-                case ItemType.ItemClassificationType.amazon_bow:
-                case ItemType.ItemClassificationType.amazon_javelin:
-                case ItemType.ItemClassificationType.amazon_spear:
-                case ItemType.ItemClassificationType.assassin_katar:
-                case ItemType.ItemClassificationType.axe:
-                case ItemType.ItemClassificationType.bow:
-                case ItemType.ItemClassificationType.club:
-                case ItemType.ItemClassificationType.crossbow:
-                case ItemType.ItemClassificationType.dagger:
-                case ItemType.ItemClassificationType.hammer:
-                case ItemType.ItemClassificationType.javelin:
-                case ItemType.ItemClassificationType.mace:
-                case ItemType.ItemClassificationType.polearm:
-                case ItemType.ItemClassificationType.scepter:
-                case ItemType.ItemClassificationType.sorceress_orb:
-                case ItemType.ItemClassificationType.spear:
-                case ItemType.ItemClassificationType.sword:
-                case ItemType.ItemClassificationType.staff:
-                case ItemType.ItemClassificationType.throwing_axe:
-                case ItemType.ItemClassificationType.throwing_knife:
-                case ItemType.ItemClassificationType.throwing_potion:
-                case ItemType.ItemClassificationType.wand:
+                case Item.ClassificationType.amazon_bow:
+                case Item.ClassificationType.amazon_javelin:
+                case Item.ClassificationType.amazon_spear:
+                case Item.ClassificationType.assassin_katar:
+                case Item.ClassificationType.axe:
+                case Item.ClassificationType.bow:
+                case Item.ClassificationType.club:
+                case Item.ClassificationType.crossbow:
+                case Item.ClassificationType.dagger:
+                case Item.ClassificationType.hammer:
+                case Item.ClassificationType.javelin:
+                case Item.ClassificationType.mace:
+                case Item.ClassificationType.polearm:
+                case Item.ClassificationType.scepter:
+                case Item.ClassificationType.sorceress_orb:
+                case Item.ClassificationType.spear:
+                case Item.ClassificationType.sword:
+                case Item.ClassificationType.staff:
+                case Item.ClassificationType.throwing_axe:
+                case Item.ClassificationType.throwing_knife:
+                case Item.ClassificationType.throwing_potion:
+                case Item.ClassificationType.wand:
                     return true;
             }
             return false;
         }
     }
   
-    public class ItemType
+    public class Item
     {
-        public ItemType()
+        public Item()
         {
             prefixes = new List<uint>();
             suffixes = new List<uint>();
-            properties = new List<ItemPropertyType>();
+            properties = new List<PropertyType>();
             sockets = UInt32.MaxValue;
         }
         public byte[] packet;
@@ -103,8 +103,8 @@ namespace CSharpClient
         public bool has_sockets;
         [XmlElement(ElementName = "SocketCount")]
         public UInt32 sockets;
-        [XmlElement(typeof(ItemQualityType),ElementName = "ItemQuality")]
-        public ItemQualityType quality;
+        [XmlElement(typeof(QualityType),ElementName = "ItemQuality")]
+        public QualityType quality;
         [XmlElement(ElementName = "Type")]
         public String type;
 
@@ -135,13 +135,13 @@ namespace CSharpClient
 
         public bool ground;
 
-        public ItemVersionType version;
+        public VersionType version;
 
         public bool unspecified_directory;
         public UInt32 x;
         public UInt32 y;
         public UInt32 directory;
-        public ItemContainerType container;
+        public ContainerType container;
 
         //public GameData.CharacterClassType ear_character_class;
         public UInt32 ear_level;
@@ -186,20 +186,20 @@ namespace CSharpClient
 
         
 
-        public List<ItemPropertyType> properties;
+        public List<PropertyType> properties;
 
 
-	    public static bool operator<(ItemType first, ItemType other)
+	    public static bool operator<(Item first, Item other)
         {
             return false;
         }
 
-        public static bool operator >(ItemType first, ItemType other)
+        public static bool operator >(Item first, Item other)
         {
             return false;
         }
 
-        public class ItemPropertyType
+        public class PropertyType
         {
             item_stat_type stat;
             Int32 value;
@@ -222,13 +222,13 @@ namespace CSharpClient
 
             UInt32 per_level;
 
-            ItemPropertyType()
+            PropertyType()
             {
 
             }
         };
 
-        public enum ItemVersionType
+        public enum VersionType
         {
             classic = 0,
             classic110 = 2,
@@ -236,7 +236,7 @@ namespace CSharpClient
             lod110 = 101
         };
 
-        public enum ItemClassType
+        public enum ClassType
         {
             not_applicable,
             normal,
@@ -244,7 +244,7 @@ namespace CSharpClient
             elite
         };
 
-        public enum ItemQualityType
+        public enum QualityType
         {
             not_applicable,
             inferior,
@@ -257,7 +257,7 @@ namespace CSharpClient
             crafted
         };
 
-        public enum equipment_directory_type
+        public enum DirectoryType
         {
             not_applicable = 0,
             helm = 1,
@@ -274,7 +274,7 @@ namespace CSharpClient
             left_hand_switch = 12
         };
 
-        public enum ItemContainerType
+        public enum ContainerType
         {
             unspecified = 0,
             inventory = 2,
@@ -290,7 +290,7 @@ namespace CSharpClient
             misc_tab = 0x88,
         };
 
-        public enum item_action_type
+        public enum Action
         {
             add_to_ground = 0,
             ground_to_cursor = 1,
@@ -347,7 +347,7 @@ namespace CSharpClient
             defense_durability = 7
         };
 
-        public enum ItemClassificationType
+        public enum ClassificationType
         {
             amazon_bow,
             amazon_javelin,

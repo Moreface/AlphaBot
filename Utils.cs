@@ -21,20 +21,13 @@ using System.Text;
 using System.IO;
 using System.Collections;
 
-namespace CSharpClient
+namespace BattleNet
 {
     class Utils
     {
-        protected static ulong readNumber(ref String input, int offset, uint size)
+        public static UInt16 ReverseBytes(UInt16 value)
         {
-            ulong output = 0;
-            for (int i = 0; i < size; i++, offset++)
-            {
-                uint temp = (byte)input[offset];
-                int shift = i * 8;
-                output |= temp << shift;
-            }
-            return output;
+            return (UInt16)((value & 0xFFU) << 8 | (value & 0xFF00U) >> 8);
         }
 
         public static string readNullTerminatedString(string packet, ref int offset)

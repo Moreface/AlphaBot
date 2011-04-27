@@ -4,21 +4,22 @@ using System.Linq;
 using System.Text;
 using System.Net.Sockets;
 
-namespace CSharpClient
+namespace BattleNet
 {
-    class GenericServerConnection
+    class GenericServer
     {
-        static public byte[] nulls = { 0x00, 0x00, 0x00, 0x00 };
-        static public byte[] ten = { 0x10, 0x00, 0x00, 0x00 };
-        static public byte[] six = { 0x06, 0x00, 0x00, 0x00 };
-        static public byte[] zero = { 0x00 };
-        static public byte[] one = { 0x01, 0x00, 0x00, 0x00 };
+        static public readonly byte[] nulls = { 0x00, 0x00, 0x00, 0x00 };
+        static public readonly byte[] ten = { 0x10, 0x00, 0x00, 0x00 };
+        static public readonly byte[] six = { 0x06, 0x00, 0x00, 0x00 };
+        static public readonly byte[] zero = { 0x00 };
+        static public readonly byte[] one = { 0x01, 0x00, 0x00, 0x00 };
 
-        static protected String platform = "68XI", classic_id = "VD2D", lod_id = "PX2D";
+        static protected readonly String platform = "68XI", classic_id = "VD2D", lod_id = "PX2D";
 
         public TcpClient m_socket;
         protected NetworkStream m_stream;
         protected ClientlessBot m_owner;
+
         public virtual void Write(byte[] packet)
         {
             try
@@ -53,7 +54,7 @@ namespace CSharpClient
                 Console.WriteLine("");
             }
         }
-        public GenericServerConnection(ClientlessBot cb)
+        public GenericServer(ClientlessBot cb)
         {
             m_owner = cb;
             m_socket = new TcpClient();

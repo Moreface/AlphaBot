@@ -4,7 +4,7 @@ using System.IO;
 using System.Reflection.Emit;
 using System.Reflection;
 
-namespace CSharpClient
+namespace BattleNet
 {
     class AdvancedCheckRevision
     {

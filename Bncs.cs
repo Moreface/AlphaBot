@@ -22,13 +22,13 @@ using System.Net.Sockets;
 using System.Collections;
 using System.Net;
 
-namespace CSharpClient
+namespace BattleNet
 {
-    class BattleNetCS : GenericServerConnection
+    class Bncs : GenericServer
     {
-        static int s_bncsPort = 6112;
+        static readonly int s_bncsPort = 6112;
 
-        static byte[] AuthInfoPacket =
+        static readonly byte[] AuthInfoPacket =
 	    {
 		    0xff, 0x50, 0x3a, 0x00, 0x00, 0x00, 0x00, 0x00,
 		    0x36, 0x38, 0x58, 0x49, 0x50, 0x58, 0x32, 0x44,
@@ -40,7 +40,7 @@ namespace CSharpClient
 		    0x73, 0x00
 	    };
 
-        public BattleNetCS(ClientlessBot cb) : base(cb)
+        public Bncs(ClientlessBot cb) : base(cb)
         {
             
         }
@@ -216,11 +216,6 @@ namespace CSharpClient
             m_owner.StartGameCreationThread();
         }
 
-        public static UInt16 ReverseBytes(UInt16 value)
-        {
-            return (UInt16)((value & 0xFFU) << 8 | (value & 0xFF00U) >> 8);
-        }
-
         protected void StartMcp(byte type, List<byte> data)
         {
             if (data.Count<= 12)
@@ -230,7 +225,7 @@ namespace CSharpClient
 			}
 
             UInt32 ip = (uint)IPAddress.NetworkToHostOrder((int)BitConverter.ToUInt32(data.ToArray(), 20));
-            m_owner.McpPort = ReverseBytes(BitConverter.ToUInt16(data.ToArray(), 24));
+            m_owner.McpPort = Utils.ReverseBytes(BitConverter.ToUInt16(data.ToArray(), 24));
             
             m_owner.McpIp = IPAddress.Parse(ip.ToString());
 

@@ -20,7 +20,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 
-namespace CSharpClient
+namespace BattleNet
 {
     class CheckRevision
     {
@@ -32,7 +32,7 @@ namespace CSharpClient
             CHECK_REVISION_FILE_ERROR
         };
 
-        static uint[] mpqHashCodes =
+        static readonly uint[] mpqHashCodes =
 	    {
 		    0xE7F4CB62,
 		    0xF6A14FFC,

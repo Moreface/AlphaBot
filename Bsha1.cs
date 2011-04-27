@@ -20,7 +20,7 @@ using System.Linq;
 using System.Text;
 using System.Collections;
 
-namespace CSharpClient
+namespace BattleNet
 {
     class Bsha1
     {

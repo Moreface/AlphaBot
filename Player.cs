@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace CSharpClient
+namespace BattleNet
 {
     class Player : Entity
     {
@@ -42,8 +42,8 @@ namespace CSharpClient
             m_directoryKnown = false;
         }
 
-        public Player(String name, UInt32 id, GameData.CharacterClassType class_, UInt32 level, Int32 x, Int32 y) :
-            base(id,x,y)
+        public Player(String name, UInt32 id, GameData.CharacterClassType class_, UInt32 level, Int32 x, Int32 y) 
+            : base(id,x,y)
         {
             m_name = name;
             m_class = class_;

@@ -26,7 +26,7 @@ using System.IO;
 using System.Xml.Serialization;
 using System.Linq.Expressions;
 
-namespace CSharpClient
+namespace BattleNet
 {
     class ClientlessBot : IDisposable
     {
@@ -155,7 +155,7 @@ namespace CSharpClient
         private UInt32 m_characterLevel;
         public UInt32 CharacterLevel { get { return m_characterLevel; } set { m_characterLevel = value; } }
         
-        public BattleNetCS m_bncs;
+        public Bncs m_bncs;
         public RealmServer m_mcp;
         public GameServer m_gs;
         public DataManager m_dm;
@@ -171,7 +171,7 @@ namespace CSharpClient
         {
             
             if (Me.Class == GameData.CharacterClassType.SORCERESS) {
-		        if (BotGameData.SkillLevels.ContainsKey(Skills.Type.lightning) && BotGameData.SkillLevels[Skills.Type.lightning] >= 15 || BotGameData.SkillLevels.ContainsKey(Skills.Type.chain_lightning) && BotGameData.SkillLevels[Skills.Type.chain_lightning] >= 15) {
+		        if (BotGameData.SkillLevels.ContainsKey(Skills.Type.LIGHTNING) && BotGameData.SkillLevels[Skills.Type.LIGHTNING] >= 15 || BotGameData.SkillLevels.ContainsKey(Skills.Type.CHAIN_LIGHTNING) && BotGameData.SkillLevels[Skills.Type.CHAIN_LIGHTNING] >= 15) {
 			        Console.WriteLine("{0}: [D2GS] Using Lightning/Chain Lightning Sorceress setup" ,Account);
 			        BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.SORCERESS_LIGHTNING;
                 }
@@ -183,109 +183,17 @@ namespace CSharpClient
                 if (BotGameData.SkillLevels.ContainsKey(Skills.Type.blessed_hammer) && BotGameData.SkillLevels[Skills.Type.blessed_hammer] >= 15 && BotGameData.SkillLevels.ContainsKey(Skills.Type.concentration) && BotGameData.SkillLevels[Skills.Type.concentration] >= 15) {
                     Console.WriteLine("{0}: [D2GS] Using Hammerdin Paladin setup.",Account);
                     BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.PALADIN_HAMMERDIN;
-                } else if (BotGameData.SkillLevels[Skills.Type.smite] >= 15 && BotGameData.SkillLevels[Skills.Type.fanaticism] >= 15) {
-                    Console.WriteLine("{0}: [D2GS] Using Smiter Paladin setup." ,Account);
-                    BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.PALADIN_SMITER;
-                } else if (BotGameData.SkillLevels[Skills.Type.vengeance] >= 15 && BotGameData.SkillLevels[Skills.Type.conviction] >= 15) {
-                    Console.WriteLine("{0}: [D2GS] Using Adam's Noob Smiter Paladin setup." ,Account);
-                    BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.PALADIN_SMITER;
                 }else {
                     Console.WriteLine("{0}: [D2GS] Unknown Paladin skill setup." ,Account);
-                    BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.UNKNOWNSETUP;
+                    BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.UNKNOWN_SETUP;
                 }
 	        } else {
 		        Console.WriteLine("No configuration available for this character class");
-		        BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.UNKNOWNSETUP;
+		        BotGameData.CharacterSkillSetup = GameData.CharacterSkillSetupType.UNKNOWN_SETUP;
 	        }
         }
 
-        #region Pickit Initialization
-        protected delegate bool PickTest(ItemType x);
-
-        protected static PickTest AddPickTest(PickTest x, PickTest newTest)
-        {
-            return delegate(ItemType item) 
-            {
-                return (x(item) || newTest(item));
-            };
-        }
-
-        protected static PickTest CreatePickTest(ItemType x)
-        {
-            return delegate(ItemType item)
-            {
-                return item.quality == x.quality;
-            };
-        }
-
-        protected static Dictionary<String, PickTest> m_pickitMap = new Dictionary<string, PickTest>();
-
-        protected static List<ItemType> m_pickitList = new List<ItemType>();
-
-
-        public static void InitializePickit()
-        {
-            FileStream fs = new FileStream("pickit.xml", FileMode.Open);
-            XmlSerializer x = new XmlSerializer(typeof(List<ItemType>));
-            m_pickitList = (List<ItemType>)x.Deserialize(fs);
-
-            foreach (ItemType i in m_pickitList)
-            {
-                Console.WriteLine("{0}: {1}, {2}, Ethereal:{3}, {4}", i.name, i.type, i.quality, i.ethereal, i.sockets);
-                if (!m_pickitMap.ContainsKey(i.type))
-                {
-                    m_pickitMap.Add(i.type, CreatePickTest(i));
-                }
-                else
-                {
-                    m_pickitMap[i.type] = AddPickTest(m_pickitMap[i.type], CreatePickTest(i));
-                }
-            }
-            fs.Close();
-        }
-
-        public static void TestPickit()
-        {
-            ItemType item1 = new ItemType();
-            item1.type = "gld";
-
-            ItemType item2 = new ItemType();
-            item2.type = "rvl";
-
-            ItemType item3 = new ItemType();
-            item3.type = "r33";
-
-            ItemType item4 = new ItemType();
-            item4.type = "oba";
-            item4.quality = ItemType.ItemQualityType.unique;
-
-            ItemType item5 = new ItemType();
-            item5.type = "oba";
-            item5.quality = ItemType.ItemQualityType.set;
-
-            List<ItemType> items = new List<ItemType>();
-
-            items.Add(item1);
-            items.Add(item2);
-            items.Add(item3);
-            items.Add(item4);
-            items.Add(item5);
-            foreach (ItemType i in items)
-            {
-                if (!m_pickitMap.ContainsKey(i.type) && i.type != "rvl" && i.type != "gld")
-                    break;
-
-                if (m_pickitMap[i.type](i) )
-                {
-                    Console.WriteLine("Picking up Item!");
-                    Console.WriteLine("{0}: {1}, {2}, Ethereal:{3}, {4}", i.name, i.type, i.quality, i.ethereal, i.sockets);
-                }
-            }
-
-            Console.ReadKey();
-        }
-
-        #endregion
+ 
 
         /*
          * 
@@ -341,7 +249,7 @@ namespace CSharpClient
         // MCP Functions
         public void JoinGame()
         {
-            m_mcp.Write(m_mcp.BuildPacket(0x04, BitConverter.GetBytes(GameRequestId), System.Text.Encoding.ASCII.GetBytes(GameName), GenericServerConnection.zero, System.Text.Encoding.ASCII.GetBytes(GamePassword), GenericServerConnection.zero));
+            m_mcp.Write(m_mcp.BuildPacket(0x04, BitConverter.GetBytes(GameRequestId), System.Text.Encoding.ASCII.GetBytes(GameName), GenericServer.zero, System.Text.Encoding.ASCII.GetBytes(GamePassword), GenericServer.zero));
         }
 
         public void MakeGame()
@@ -362,8 +270,8 @@ namespace CSharpClient
             Console.WriteLine("{0}: [MCP] Creating game \"{1}\" with password \"{2}\"", Account, GameName, GamePassword);
 
             byte[] temp = { 0x01, 0xff, 0x08 };
-            byte[] packet = m_mcp.BuildPacket(0x03, BitConverter.GetBytes((UInt16)GameRequestId), BitConverter.GetBytes(Utils.GetDifficulty(Difficulty)), temp, System.Text.Encoding.ASCII.GetBytes(GameName), GenericServerConnection.zero,
-                            System.Text.Encoding.ASCII.GetBytes(GamePassword), GenericServerConnection.zero, GenericServerConnection.zero);
+            byte[] packet = m_mcp.BuildPacket(0x03, BitConverter.GetBytes((UInt16)GameRequestId), BitConverter.GetBytes(Utils.GetDifficulty(Difficulty)), temp, System.Text.Encoding.ASCII.GetBytes(GameName), GenericServer.zero,
+                            System.Text.Encoding.ASCII.GetBytes(GamePassword), GenericServer.zero, GenericServer.zero);
 
             m_mcp.Write(packet);
             GameRequestId++;
@@ -377,8 +285,8 @@ namespace CSharpClient
             switch (BotGameData.CharacterSkillSetup)
             {
                 case GameData.CharacterSkillSetupType.SORCERESS_LIGHTNING:
-                    if(BotGameData.RightSkill != (uint)Skills.Type.lightning)
-                        SwitchSkill((uint)Skills.Type.lightning);
+                    if(BotGameData.RightSkill != (uint)Skills.Type.LIGHTNING)
+                        SwitchSkill((uint)Skills.Type.LIGHTNING);
                     Thread.Sleep(300);
                     CastOnObject(id);
                     break;
@@ -396,7 +304,7 @@ namespace CSharpClient
             return true;
         }
 
-        public virtual void Pickit()
+        public virtual void PickItems()
         {
             var picking_items = (from i in BotGameData.Items
                                  where i.Value.ground select i.Value);
@@ -405,18 +313,18 @@ namespace CSharpClient
             {
                 foreach (var i in picking_items)
                 {
-                    if(i.type != "mp5" && i.type != "hp5" && i.type != "gld" && i.type != "rvl" && i.quality > ItemType.ItemQualityType.normal)
+                    if(i.type != "mp5" && i.type != "hp5" && i.type != "gld" && i.type != "rvl" && i.quality > Item.QualityType.normal)
                         Console.WriteLine("{0}: {1}, {2}, Ethereal:{3}, {4}", i.name, i.type, i.quality, i.ethereal, i.sockets);
                 }
                 try
                 {
                     foreach (var i in picking_items)
                     {
-                        if (!m_pickitMap.ContainsKey(i.type))
+                        if (!Pickit.PickitMap.ContainsKey(i.type))
                             continue;
                         if (BotGameData.Belt.m_items.Count >= 16 && i.type == "rvl")
                             continue;
-                        if (m_pickitMap[i.type](i))
+                        if (Pickit.PickitMap[i.type](i))
                         {
                             if(i.type != "gld" && i.type != "rvl")
                             {
@@ -428,13 +336,13 @@ namespace CSharpClient
                             CastOnCoord((ushort)i.x, (ushort)i.y);
                             Thread.Sleep(400);
                             byte[] tempa = { 0x04, 0x00, 0x00, 0x00 };
-                            SendPacket(0x16, tempa, BitConverter.GetBytes((Int32)i.id), GenericServerConnection.nulls);
+                            SendPacket(0x16, tempa, BitConverter.GetBytes((Int32)i.id), GenericServer.nulls);
                             Thread.Sleep(500);
                             if (i.type != "rvl" && i.type != "gld")
                             {
                                 using (StreamWriter sw = File.AppendText("log.txt"))
                                 {
-                                    sw.WriteLine("[{5}] {0}: {1}, {2}, Ethereal:{3}, {4}", i.name, i.type, i.quality, i.ethereal, i.sockets == uint.MaxValue ? 0 : i.sockets, Account);
+                                    sw.WriteLine("{6} [{5}] {0}: {1}, {2}, Ethereal:{3}, {4}", i.name, i.type, i.quality, i.ethereal, i.sockets == uint.MaxValue ? 0 : i.sockets, Account, DateTime.Today.ToShortTimeString());
                                 }	
                             }
                         }
@@ -455,7 +363,7 @@ namespace CSharpClient
 
         public void CastOnObject(uint id)
         {
-            SendPacket(0x0d,GenericServerConnection.one, BitConverter.GetBytes(id));
+            SendPacket(0x0d,GenericServer.one, BitConverter.GetBytes(id));
             Thread.Sleep(200);
         }
 
@@ -544,24 +452,24 @@ namespace CSharpClient
 
         public void RequestReassignment()
         {
-            SendPacket(0x4b, GenericServerConnection.nulls, BitConverter.GetBytes(Me.Id));
+            SendPacket(0x4b, GenericServer.nulls, BitConverter.GetBytes(Me.Id));
         }
 
         public virtual void StashItems()
         {
             bool onCursor = false;
-            List<ItemType> items;
+            List<Item> items;
             lock (ItemListLock)
             {
-                 items = new List<ItemType>(BotGameData.Items.Values);
+                 items = new List<Item>(BotGameData.Items.Values);
             }
-            foreach (ItemType i in items)
+            foreach (Item i in items)
             {
                 onCursor = false;
 
-                if (i.action == (uint)ItemType.item_action_type.to_cursor)
+                if (i.action == (uint)Item.Action.to_cursor)
                     onCursor = true;
-                else if (i.container == ItemType.ItemContainerType.inventory)
+                else if (i.container == Item.ContainerType.inventory)
                     onCursor = false;
                 else
                     continue;
@@ -602,7 +510,7 @@ namespace CSharpClient
             if (!TalkToTrader(id))
                 return false;
 
-            SendPacket(0x30, GenericServerConnection.one, BitConverter.GetBytes(id));
+            SendPacket(0x30, GenericServer.one, BitConverter.GetBytes(id));
 
             return true;
         }
@@ -617,20 +525,20 @@ namespace CSharpClient
             //if(debugging)
             Console.WriteLine("{0}: [D2GS] Attempting to talk to NPC",Account);
 
-            SendPacket(0x59, GenericServerConnection.one, BitConverter.GetBytes(id),
-                        BitConverter.GetBytes((UInt16)BotGameData.Me.Location.X), GenericServerConnection.zero, GenericServerConnection.zero,
-                        BitConverter.GetBytes((UInt16)BotGameData.Me.Location.Y), GenericServerConnection.zero, GenericServerConnection.zero);
+            SendPacket(0x59, GenericServer.one, BitConverter.GetBytes(id),
+                        BitConverter.GetBytes((UInt16)BotGameData.Me.Location.X), GenericServer.zero, GenericServer.zero,
+                        BitConverter.GetBytes((UInt16)BotGameData.Me.Location.Y), GenericServer.zero, GenericServer.zero);
 
             int sleepStep = 200;
             for (int timeDifference = (int)distance * 120; timeDifference > 0; timeDifference -= sleepStep)
             {
-                SendPacket(0x04, GenericServerConnection.one, BitConverter.GetBytes(id));
+                SendPacket(0x04, GenericServer.one, BitConverter.GetBytes(id));
                 Thread.Sleep(Math.Min(sleepStep,timeDifference));
             }
 
-            SendPacket(0x13, GenericServerConnection.one, BitConverter.GetBytes(id));
+            SendPacket(0x13, GenericServer.one, BitConverter.GetBytes(id));
             Thread.Sleep(200);
-            SendPacket(0x2f, GenericServerConnection.one, BitConverter.GetBytes(id));
+            SendPacket(0x2f, GenericServer.one, BitConverter.GetBytes(id));
 
             int timeoutStep = 100;
             for (long npc_timeout = 4000; npc_timeout > 0 && !BotGameData.TalkedToNpc; npc_timeout -= timeoutStep)
@@ -671,15 +579,15 @@ namespace CSharpClient
 
         public virtual bool UsePotion()
         {
-            ItemType pot = (from n in BotGameData.Belt.m_items 
+            Item pot = (from n in BotGameData.Belt.m_items 
                     where n.type == "rvl" select n).FirstOrDefault();
 
-            if (pot == default(ItemType))
+            if (pot == default(Item))
             {
                 Console.WriteLine("{0}: [D2GS] No potions found in belt!", Account);
                 return false;
             }
-            SendPacket(0x26, BitConverter.GetBytes(pot.id), GenericServerConnection.nulls, GenericServerConnection.nulls);
+            SendPacket(0x26, BitConverter.GetBytes(pot.id), GenericServer.nulls, GenericServer.nulls);
             BotGameData.Belt.m_items.Remove(pot);
             return true;
         }
@@ -725,7 +633,7 @@ namespace CSharpClient
             m_gameExeInformation = "Game.exe 03/09/10 04:10:51 61440";
 
             m_dm = dm;
-            m_bncs = new BattleNetCS(this);
+            m_bncs = new Bncs(this);
             m_mcp = new RealmServer(this);
             m_gs = new GameServer(this);
             m_bncsThread = new Thread(m_bncs.ThreadFunction);
@@ -740,7 +648,7 @@ namespace CSharpClient
         {
             m_gameExeInformation = "Game.exe 03/09/10 04:10:51 61440";
             m_dm = dm;
-            m_bncs = new BattleNetCS(this);
+            m_bncs = new Bncs(this);
             m_mcp = new RealmServer(this);
             m_gs = new GameServer(this);
             m_bncsThread = new Thread(m_bncs.ThreadFunction);

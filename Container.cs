@@ -4,20 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Collections;
 
-namespace CSharpClient
+namespace BattleNet
 {
     class Container
     {
         protected String m_name;
         protected Int32 m_width, m_height;
 
-        public List<ItemType> m_items;
+        public List<Item> m_items;
         public List<BitArray> m_fields;
 
 
         public Container(String name, Int32 width, Int32 height)
         {
-            m_items = new List<ItemType>();
+            m_items = new List<Item>();
             m_name = name;
             m_width = width;
             m_height = height;
@@ -34,7 +34,7 @@ namespace CSharpClient
 
         }
 
-        protected void SetItemFields(ItemType item, bool value)
+        protected void SetItemFields(Item item, bool value)
         {
             try
             {
@@ -64,13 +64,13 @@ namespace CSharpClient
 	        return true;
         }
 
-        public void Add(ItemType item)
+        public void Add(Item item)
         {
             m_items.Add(item);
             SetItemFields(item, true);
         }
 
-        public void Remove(ItemType item)
+        public void Remove(Item item)
         {
             SetItemFields(item, false);
             m_items.Remove(item);
@@ -88,7 +88,7 @@ namespace CSharpClient
 	        return i;
         }
 
-        public Boolean FindFreeSpace(ItemType item, out Coordinate output)
+        public Boolean FindFreeSpace(Item item, out Coordinate output)
         {
         	Int32 item_width = item.width;
 	        Int32 item_height = item.height;
@@ -107,7 +107,7 @@ namespace CSharpClient
 	        return false;
         }
 
-        public Boolean FindFreeSpace(ItemType item)
+        public Boolean FindFreeSpace(Item item)
         {
             Coordinate output;
             return FindFreeSpace(item, out output);

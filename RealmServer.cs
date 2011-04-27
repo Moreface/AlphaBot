@@ -22,9 +22,9 @@ using System.Net.Sockets;
 using System.Collections;
 using System.Net;
 
-namespace CSharpClient
+namespace BattleNet
 {
-    class RealmServer : GenericServerConnection
+    class RealmServer : GenericServer
     {
         public RealmServer(ClientlessBot cb) : base(cb)
         {

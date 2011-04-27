@@ -22,9 +22,9 @@ using System.Net.Sockets;
 using System.Collections;
 using System.Threading;
 
-namespace CSharpClient
+namespace BattleNet
 {
-    class GameServer : GenericServerConnection
+    class GameServer : GenericServer
     {
         protected static Int32 s_gsPort = 4000;
 
@@ -148,24 +148,24 @@ namespace CSharpClient
 
         protected void ItemAction(byte type, List<byte> data)
         {
-            ItemType item = ParseItem(data);
-            ItemType temp;
+            Item item = ParseItem(data);
+            Item temp;
 
             if (!item.ground && !item.unspecified_directory)
             {
                 switch (item.container)
                 {
-                    case ItemType.ItemContainerType.inventory:
+                    case Item.ContainerType.inventory:
                         m_owner.BotGameData.Inventory.Add(item);
                         //Console.WriteLine("New Item in Inventory!");
                         break;
-                    case ItemType.ItemContainerType.cube:
+                    case Item.ContainerType.cube:
                         m_owner.BotGameData.Cube.Add(item);
                         break;
-                    case ItemType.ItemContainerType.stash:
+                    case Item.ContainerType.stash:
                         m_owner.BotGameData.Stash.Add(item);
                         break;
-                    case ItemType.ItemContainerType.belt:
+                    case Item.ContainerType.belt:
                         m_owner.BotGameData.Belt.Add(item);
                         break;
                 }
@@ -596,11 +596,12 @@ namespace CSharpClient
 
         protected void LoadActData(byte type, List<byte> data)
         {
+            byte[] packet = data.ToArray();
             if (ClientlessBot.debugging)
                 Console.WriteLine("{0}: [D2GS] Loading Act Data", m_owner.Account);
             m_owner.BotGameData.CurrentAct = (GameData.ActType)data[1];
-            m_owner.BotGameData.MapId = BitConverter.ToInt32(data.ToArray(), 2);
-            m_owner.BotGameData.AreaId = BitConverter.ToInt32(data.ToArray(), 6);
+            m_owner.BotGameData.MapId = BitConverter.ToInt32(packet, 2);
+            m_owner.BotGameData.AreaId = BitConverter.ToInt32(packet, 6);
             if (!m_owner.BotGameData.FullyEnteredGame)
             {
                 m_owner.BotGameData.FullyEnteredGame = true;
@@ -896,9 +897,9 @@ namespace CSharpClient
 	        return true;
         }
 
-        protected ItemType ParseItem(List<byte> data)
+        protected Item ParseItem(List<byte> data)
         {
-            ItemType item = new ItemType();
+            Item item = new Item();
             item.packet = data.ToArray();
 
             //try
@@ -945,7 +946,7 @@ namespace CSharpClient
                 item.rune_word = reader.ReadBit();
                 reader.Read(5);
 
-                item.version = (ItemType.ItemVersionType)(reader.Read(8));
+                item.version = (Item.VersionType)(reader.Read(8));
 
                 reader.Read(2);
                 byte destination = (byte)reader.Read(3);
@@ -962,12 +963,12 @@ namespace CSharpClient
                     item.directory = (byte)reader.Read(4);
                     item.x = (byte)reader.Read(4);
                     item.y = (byte)reader.Read(3);
-                    item.container = (ItemType.ItemContainerType)(reader.Read(4));
+                    item.container = (Item.ContainerType)(reader.Read(4));
                 }
 
                 item.unspecified_directory = false;
 
-                if (item.action == (uint)ItemType.item_action_type.add_to_shop || item.action == (uint)ItemType.item_action_type.remove_from_shop)
+                if (item.action == (uint)Item.Action.add_to_shop || item.action == (uint)Item.Action.remove_from_shop)
                 {
                     long container = (long)(item.container);
                     container |= 0x80;
@@ -976,18 +977,18 @@ namespace CSharpClient
                         container--; //remove first bit
                         item.y += 8;
                     }
-                    item.container = (ItemType.ItemContainerType)(container);
+                    item.container = (Item.ContainerType)(container);
                 }
-                else if (item.container == ItemType.ItemContainerType.unspecified)
+                else if (item.container == Item.ContainerType.unspecified)
                 {
-                    if (item.directory == (uint)ItemType.equipment_directory_type.not_applicable)
+                    if (item.directory == (uint)Item.DirectoryType.not_applicable)
                     {
                         if (item.in_socket)
                             //y is ignored for this container type, x tells you the index
-                            item.container = ItemType.ItemContainerType.item;
-                        else if (item.action == (uint)ItemType.item_action_type.put_in_belt || item.action == (uint)ItemType.item_action_type.remove_from_belt)
+                            item.container = Item.ContainerType.item;
+                        else if (item.action == (uint)Item.Action.put_in_belt || item.action == (uint)Item.Action.remove_from_belt)
                         {
-                            item.container = ItemType.ItemContainerType.belt;
+                            item.container = Item.ContainerType.belt;
                             item.y = item.x / 4;
                             item.x %= 4;
                         }
@@ -1039,14 +1040,14 @@ namespace CSharpClient
 
                 item.used_sockets = (byte)reader.Read(3);
 
-                item.quality = ItemType.ItemQualityType.normal;
+                item.quality = Item.QualityType.normal;
 
                 if (item.simple_item || item.gambling)
                     return item;
 
                 item.level = (byte)reader.Read(7);
 
-                item.quality = (ItemType.ItemQualityType)(reader.Read(4));
+                item.quality = (Item.QualityType)(reader.Read(4));
 
 
                 // EVERYTHING AFTER THIS NEEDS FIXING!
@@ -1066,19 +1067,19 @@ namespace CSharpClient
                 {
                     switch (item.quality)
                     {
-                        case ItemType.ItemQualityType.inferior:
+                        case Item.QualityType.inferior:
                             item.prefix = (byte)reader.Read(3);
                             break;
-                        case ItemType.ItemQualityType.superior:
-                            item.superiority = (ItemType.SuperiorItemClassType)(reader.Read(3));
+                        case Item.QualityType.superior:
+                            item.superiority = (Item.SuperiorItemClassType)(reader.Read(3));
                             break;
-                        case ItemType.ItemQualityType.magical:
+                        case Item.QualityType.magical:
                             item.prefix = (uint)reader.Read(11);
                             item.suffix = (uint)reader.Read(11);
                             break;
 
-                        case ItemType.ItemQualityType.crafted:
-                        case ItemType.ItemQualityType.rare:
+                        case Item.QualityType.crafted:
+                        case Item.QualityType.rare:
                             item.prefix = (uint)reader.Read(8) - 156;
                             item.suffix = (uint)reader.Read(8) - 1;
                             if (ClientlessBot.debugging)
@@ -1091,17 +1092,17 @@ namespace CSharpClient
                             }
                             break;
 
-                        case ItemType.ItemQualityType.set:
+                        case Item.QualityType.set:
                             item.set_code = (uint)reader.Read(12);
                             break;
-                        case ItemType.ItemQualityType.unique:
+                        case Item.QualityType.unique:
                             if (item.type != "std") //standard of heroes exception?
                                 item.unique_code = (uint)reader.Read(12);
                             break;
                     }
                 }
 
-                if (item.quality == ItemType.ItemQualityType.rare || item.quality == ItemType.ItemQualityType.crafted)
+                if (item.quality == Item.QualityType.rare || item.quality == Item.QualityType.crafted)
                 {
                     for (ulong i = 0; i < 3; i++)
                     {
@@ -1173,7 +1174,7 @@ namespace CSharpClient
                     item.amount = (uint)reader.Read(9);
                 }
                 uint set_mods = 0;
-                if (item.quality == ItemType.ItemQualityType.set)
+                if (item.quality == Item.QualityType.set)
                     set_mods = (byte)reader.Read(5);
 
                 //reader.debugging = debugging;
@@ -1192,7 +1193,7 @@ namespace CSharpClient
                         break;
                     }
 
-                    ItemType.ItemPropertyType item_property;
+                    Item.PropertyType item_property;
 
 
                     //process_item_stat(stat_id, reader, item_property);

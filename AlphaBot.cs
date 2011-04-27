@@ -6,8 +6,9 @@ using System.Text;
 using System.Threading;
 using System.IO;
 using System.Xml.Serialization;
+using System.Data.SQLite;
 
-namespace CSharpClient
+namespace BattleNet
 {
     class AlphaBot : ClientlessBot
     {
@@ -88,10 +89,10 @@ namespace CSharpClient
             if (GetSkillLevel(Skills.Type.book_of_townportal) < 10)
             {
                 Thread.Sleep(300);
-                SendPacket(0x38, GenericServerConnection.one, BitConverter.GetBytes(malah.Id), GenericServerConnection.nulls);
+                SendPacket(0x38, GenericServer.one, BitConverter.GetBytes(malah.Id), GenericServer.nulls);
                 Thread.Sleep(2000);
-                ItemType n = (from item in BotGameData.Items
-                              where item.Value.action == (uint)ItemType.item_action_type.add_to_shop
+                Item n = (from item in BotGameData.Items
+                              where item.Value.action == (uint)Item.Action.add_to_shop
                               && item.Value.type == "tsc"
                               select item).FirstOrDefault().Value;
 
@@ -99,13 +100,13 @@ namespace CSharpClient
                 byte[] temp = { 0x02, 0x00, 0x00, 0x00 };
                 for (int i = 0; i < 9; i++)
                 {
-                    SendPacket(0x32, BitConverter.GetBytes(malah.Id), BitConverter.GetBytes(n.id), GenericServerConnection.nulls, temp);
+                    SendPacket(0x32, BitConverter.GetBytes(malah.Id), BitConverter.GetBytes(n.id), GenericServer.nulls, temp);
                     Thread.Sleep(200);
                 }
                 Thread.Sleep(500);
             }
             if (malah != null && malah != default(NpcEntity))
-                SendPacket(0x30, GenericServerConnection.one, BitConverter.GetBytes(malah.Id));
+                SendPacket(0x30, GenericServer.one, BitConverter.GetBytes(malah.Id));
             else
             {
                 LeaveGame();
@@ -133,13 +134,13 @@ namespace CSharpClient
                     return false;
                 }
                 byte[] three = { 0x03, 0x00, 0x00, 0x00 };
-                SendPacket(0x38, three, BitConverter.GetBytes(qual.Id), GenericServerConnection.nulls);
+                SendPacket(0x38, three, BitConverter.GetBytes(qual.Id), GenericServer.nulls);
                 Thread.Sleep(300);
                 SendPacket(0x62, BitConverter.GetBytes(qual.Id));
                 Thread.Sleep(300);
-                SendPacket(0x38, three, BitConverter.GetBytes(qual.Id), GenericServerConnection.nulls);
+                SendPacket(0x38, three, BitConverter.GetBytes(qual.Id), GenericServer.nulls);
                 Thread.Sleep(300);
-                SendPacket(0x30, GenericServerConnection.one, BitConverter.GetBytes(qual.Id));
+                SendPacket(0x30, GenericServer.one, BitConverter.GetBytes(qual.Id));
                 Thread.Sleep(300);
 
                 MoveTo(5060, 5076);
@@ -259,7 +260,7 @@ namespace CSharpClient
                     }
                 }
                 Console.WriteLine("{0}: [D2GS] Minions are dead, looting...", Account);
-                Pickit();
+                PickItems();
 
                 //if (!TownPortal())
                 //{
@@ -323,17 +324,22 @@ namespace CSharpClient
 
         static void Main(string[] args)
         {
+            
             DataManager dm = new DataManager("data");
-            AlphaBot.InitializePickit();
+            Pickit.InitializePickit();
             AlphaBot cb;
             AlphaBot cb2;
             AlphaBot cb3;
             if (args.Length < 4)
                 Console.WriteLine("Must supply command line args");
             else
-            {
-                cb = new AlphaBot(true, false, false, dm, "useast.battle.net", args[0], args[1], args[2], args[3], 300, 200, "data", ClientlessBot.GameDifficulty.HELL, "xa1");
-
+            {             
+               
+                cb.Start();
+                Thread.Sleep(5000);
+                cb2.Start();
+                Thread.Sleep(5000);
+                cb3.Start();
             }
             Console.ReadKey();
             return;

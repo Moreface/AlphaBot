@@ -4,11 +4,8 @@ using System.Linq;
 using System.Text;
 using System.IO;
 
-namespace CSharpClient
+namespace BattleNet
 {
-
-
-
     class DataManager
     {
 
@@ -73,66 +70,66 @@ namespace CSharpClient
         public ItemDataType(String file)
         {
             m_items = new List<ItemEntry>();
-            Dictionary<String,ItemType.ItemClassificationType> classificationMap = new Dictionary<string,ItemType.ItemClassificationType>();
-            classificationMap["Amazon Bow"] = ItemType.ItemClassificationType.amazon_bow;
-            classificationMap["Amazon Javelin"] = ItemType.ItemClassificationType.amazon_javelin;
-            classificationMap["Amazon Spear"] = ItemType.ItemClassificationType.amazon_spear;
-            classificationMap["Amulet"] = ItemType.ItemClassificationType.amulet;
-            classificationMap["Antidote Potion"] = ItemType.ItemClassificationType.antidote_potion;
-            classificationMap["Armor"] = ItemType.ItemClassificationType.armor;
-            classificationMap["Arrows"] = ItemType.ItemClassificationType.arrows;
-            classificationMap["Assassin Katar"] = ItemType.ItemClassificationType.assassin_katar;
-            classificationMap["Axe"] = ItemType.ItemClassificationType.axe;
-            classificationMap["Barbarian Helm"] = ItemType.ItemClassificationType.barbarian_helm;
-            classificationMap["Belt"] = ItemType.ItemClassificationType.belt;
-            classificationMap["Body Part"] = ItemType.ItemClassificationType.body_part;
-            classificationMap["Bolts"] = ItemType.ItemClassificationType.bolts;
-            classificationMap["Boots"] = ItemType.ItemClassificationType.boots;
-            classificationMap["Bow"] = ItemType.ItemClassificationType.bow;
-            classificationMap["Circlet"] = ItemType.ItemClassificationType.circlet;
-            classificationMap["Club"] = ItemType.ItemClassificationType.club;
-            classificationMap["Crossbow"] = ItemType.ItemClassificationType.crossbow;
-            classificationMap["Dagger"] = ItemType.ItemClassificationType.dagger;
-            classificationMap["Druid Pelt"] = ItemType.ItemClassificationType.druid_pelt;
-            classificationMap["Ear"] = ItemType.ItemClassificationType.ear;
-            classificationMap["Elixir"] = ItemType.ItemClassificationType.elixir;
-            classificationMap["Gem"] = ItemType.ItemClassificationType.gem;
-            classificationMap["Gloves"] = ItemType.ItemClassificationType.gloves;
-            classificationMap["Gold"] = ItemType.ItemClassificationType.gold;
-            classificationMap["Grand Charm"] = ItemType.ItemClassificationType.grand_charm;
-            classificationMap["Hammer"] = ItemType.ItemClassificationType.hammer;
-            classificationMap["Health Potion"] = ItemType.ItemClassificationType.health_potion;
-            classificationMap["Helm"] = ItemType.ItemClassificationType.helm;
-            classificationMap["Herb"] = ItemType.ItemClassificationType.herb;
-            classificationMap["Javelin"] = ItemType.ItemClassificationType.javelin;
-            classificationMap["Jewel"] = ItemType.ItemClassificationType.jewel;
-            classificationMap["Key"] = ItemType.ItemClassificationType.key;
-            classificationMap["Large Charm"] = ItemType.ItemClassificationType.large_charm;
-            classificationMap["Mace"] = ItemType.ItemClassificationType.mace;
-            classificationMap["Mana Potion"] = ItemType.ItemClassificationType.mana_potion;
-            classificationMap["Necromancer Shrunken Head"] = ItemType.ItemClassificationType.necromancer_shrunken_head;
-            classificationMap["Paladin Shield"] = ItemType.ItemClassificationType.paladin_shield;
-            classificationMap["Polearm"] = ItemType.ItemClassificationType.polearm;
-            classificationMap["Quest Item"] = ItemType.ItemClassificationType.quest_item;
-            classificationMap["Rejuvenation Potion"] = ItemType.ItemClassificationType.rejuvenation_potion;
-            classificationMap["Ring"] = ItemType.ItemClassificationType.ring;
-            classificationMap["Rune"] = ItemType.ItemClassificationType.rune;
-            classificationMap["Scepter"] = ItemType.ItemClassificationType.scepter;
-            classificationMap["Scroll"] = ItemType.ItemClassificationType.scroll;
-            classificationMap["Shield"] = ItemType.ItemClassificationType.shield;
-            classificationMap["Small Charm"] = ItemType.ItemClassificationType.small_charm;
-            classificationMap["Sorceress Orb"] = ItemType.ItemClassificationType.sorceress_orb;
-            classificationMap["Spear"] = ItemType.ItemClassificationType.spear;
-            classificationMap["Staff"] = ItemType.ItemClassificationType.staff;
-            classificationMap["Stamina Potion"] = ItemType.ItemClassificationType.stamina_potion;
-            classificationMap["Sword"] = ItemType.ItemClassificationType.sword;
-            classificationMap["Thawing Potion"] = ItemType.ItemClassificationType.thawing_potion;
-            classificationMap["Throwing Axe"] = ItemType.ItemClassificationType.throwing_axe;
-            classificationMap["Throwing Knife"] = ItemType.ItemClassificationType.throwing_knife;
-            classificationMap["Throwing Potion"] = ItemType.ItemClassificationType.throwing_potion;
-            classificationMap["Tome"] = ItemType.ItemClassificationType.tome;
-            classificationMap["Torch"] = ItemType.ItemClassificationType.torch;
-            classificationMap["Wand"] = ItemType.ItemClassificationType.wand;
+            Dictionary<String,Item.ClassificationType> classificationMap = new Dictionary<string,Item.ClassificationType>();
+            classificationMap["Amazon Bow"] = Item.ClassificationType.amazon_bow;
+            classificationMap["Amazon Javelin"] = Item.ClassificationType.amazon_javelin;
+            classificationMap["Amazon Spear"] = Item.ClassificationType.amazon_spear;
+            classificationMap["Amulet"] = Item.ClassificationType.amulet;
+            classificationMap["Antidote Potion"] = Item.ClassificationType.antidote_potion;
+            classificationMap["Armor"] = Item.ClassificationType.armor;
+            classificationMap["Arrows"] = Item.ClassificationType.arrows;
+            classificationMap["Assassin Katar"] = Item.ClassificationType.assassin_katar;
+            classificationMap["Axe"] = Item.ClassificationType.axe;
+            classificationMap["Barbarian Helm"] = Item.ClassificationType.barbarian_helm;
+            classificationMap["Belt"] = Item.ClassificationType.belt;
+            classificationMap["Body Part"] = Item.ClassificationType.body_part;
+            classificationMap["Bolts"] = Item.ClassificationType.bolts;
+            classificationMap["Boots"] = Item.ClassificationType.boots;
+            classificationMap["Bow"] = Item.ClassificationType.bow;
+            classificationMap["Circlet"] = Item.ClassificationType.circlet;
+            classificationMap["Club"] = Item.ClassificationType.club;
+            classificationMap["Crossbow"] = Item.ClassificationType.crossbow;
+            classificationMap["Dagger"] = Item.ClassificationType.dagger;
+            classificationMap["Druid Pelt"] = Item.ClassificationType.druid_pelt;
+            classificationMap["Ear"] = Item.ClassificationType.ear;
+            classificationMap["Elixir"] = Item.ClassificationType.elixir;
+            classificationMap["Gem"] = Item.ClassificationType.gem;
+            classificationMap["Gloves"] = Item.ClassificationType.gloves;
+            classificationMap["Gold"] = Item.ClassificationType.gold;
+            classificationMap["Grand Charm"] = Item.ClassificationType.grand_charm;
+            classificationMap["Hammer"] = Item.ClassificationType.hammer;
+            classificationMap["Health Potion"] = Item.ClassificationType.health_potion;
+            classificationMap["Helm"] = Item.ClassificationType.helm;
+            classificationMap["Herb"] = Item.ClassificationType.herb;
+            classificationMap["Javelin"] = Item.ClassificationType.javelin;
+            classificationMap["Jewel"] = Item.ClassificationType.jewel;
+            classificationMap["Key"] = Item.ClassificationType.key;
+            classificationMap["Large Charm"] = Item.ClassificationType.large_charm;
+            classificationMap["Mace"] = Item.ClassificationType.mace;
+            classificationMap["Mana Potion"] = Item.ClassificationType.mana_potion;
+            classificationMap["Necromancer Shrunken Head"] = Item.ClassificationType.necromancer_shrunken_head;
+            classificationMap["Paladin Shield"] = Item.ClassificationType.paladin_shield;
+            classificationMap["Polearm"] = Item.ClassificationType.polearm;
+            classificationMap["Quest Item"] = Item.ClassificationType.quest_item;
+            classificationMap["Rejuvenation Potion"] = Item.ClassificationType.rejuvenation_potion;
+            classificationMap["Ring"] = Item.ClassificationType.ring;
+            classificationMap["Rune"] = Item.ClassificationType.rune;
+            classificationMap["Scepter"] = Item.ClassificationType.scepter;
+            classificationMap["Scroll"] = Item.ClassificationType.scroll;
+            classificationMap["Shield"] = Item.ClassificationType.shield;
+            classificationMap["Small Charm"] = Item.ClassificationType.small_charm;
+            classificationMap["Sorceress Orb"] = Item.ClassificationType.sorceress_orb;
+            classificationMap["Spear"] = Item.ClassificationType.spear;
+            classificationMap["Staff"] = Item.ClassificationType.staff;
+            classificationMap["Stamina Potion"] = Item.ClassificationType.stamina_potion;
+            classificationMap["Sword"] = Item.ClassificationType.sword;
+            classificationMap["Thawing Potion"] = Item.ClassificationType.thawing_potion;
+            classificationMap["Throwing Axe"] = Item.ClassificationType.throwing_axe;
+            classificationMap["Throwing Knife"] = Item.ClassificationType.throwing_knife;
+            classificationMap["Throwing Potion"] = Item.ClassificationType.throwing_potion;
+            classificationMap["Tome"] = Item.ClassificationType.tome;
+            classificationMap["Torch"] = Item.ClassificationType.torch;
+            classificationMap["Wand"] = Item.ClassificationType.wand;
 
             List<string> lines = new List<string>();
 
@@ -165,7 +162,7 @@ namespace CSharpClient
                     bool stackable = UInt32.Parse(tokens[5]) != 0;
                     bool usable = UInt32.Parse(tokens[6]) != 0;
                     bool throwable = UInt32.Parse(tokens[7]) != 0;
-                    ItemType.ItemClassificationType classification;
+                    Item.ClassificationType classification;
                     if (!classificationMap.TryGetValue(classification_string, out classification))
                         throw new Exception("Unable to parse item classification");
                     ItemEntry i = new ItemEntry(name, code, classification, width, height, stackable, usable, throwable);

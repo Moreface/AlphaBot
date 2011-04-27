@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace CSharpClient
+namespace BattleNet
 {
     class Skills
     {
@@ -58,11 +58,11 @@ namespace CSharpClient
             blaze,
             fire_ball,
             nova,
-            lightning,
+            LIGHTNING,
             shiver_armor,
             fire_wall,
             enchant,
-            chain_lightning,
+            CHAIN_LIGHTNING,
             teleport,
             glacial_spike,
             meteor,

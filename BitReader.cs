@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Collections;
 
-namespace CSharpClient
+namespace BattleNet
 {
     class BitReader
     {
@@ -54,11 +54,6 @@ namespace CSharpClient
             return bits;
         }
 
-        public byte ReadByte()
-        {
-            return 0;
-        }
-
         public byte ConvertToByte(BitArray bits)
         {
             if (bits.Count != 8)
@@ -69,29 +64,5 @@ namespace CSharpClient
             bits.CopyTo(bytes, 0);
             return bytes[0];
         }
-        /*
-        static void Main(string[] args)
-        {
-            byte[] ba = { 0x10,0x88 };
-            BitReader br= new BitReader(ba);
-
-            for (int i = 0; i < ba.Length * 8; i++)
-            {
-                Console.Write("{0} ", br.ReadBit() ? 1 : 0);
-            }
-
-            Console.WriteLine();
-
-            br = new BitReader(ba);
-            Console.WriteLine("{0}", br.ReadBitsLittleEndian(8));
-            Console.WriteLine("{0}", br.ReadBitsLittleEndian(8));
-            for (int i = 0; i < 8; i++)
-            {
-                Console.Write("{0} ", br.ReadBit() ? 1 : 0);
-            }
-            Console.ReadKey();
-
-        }
-        */
     }
 }
