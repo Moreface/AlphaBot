@@ -304,14 +304,14 @@ namespace CSharpClient
 
         static void Main(string[] args)
         {
-            DataManager dm = new DataManager("data\\");
+            DataManager dm = new DataManager("data");
             AlphaBot.InitializePickit();
             AlphaBot cb;
             if (args.Length < 4)
                 Console.WriteLine("Must supply command line args");
             else
             {
-                cb = new AlphaBot(true, false, false, dm, "useast.battle.net", args[0], args[1], args[2], args[3], 300, 200, "data\\", ClientlessBot.GameDifficulty.HELL, "xa1");
+                cb = new AlphaBot(true, false, false, dm, "useast.battle.net", args[0], args[1], args[2], args[3], 300, 200, "data", ClientlessBot.GameDifficulty.HELL, "xa1");
                 cb.Start();
             }
             Console.ReadKey();

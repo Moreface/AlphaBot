@@ -460,8 +460,10 @@ namespace CSharpClient
             {
             }
 
-            uint exe_checksum = AdvancedCheckRevision.FastComputeHash(formula_string, mpq_file_name, m_owner.BinaryDirectory + "Game.exe", 
-                                                            m_owner.BinaryDirectory + "Bnclient.dll", m_owner.BinaryDirectory + "D2Client.dll");
+            uint exe_checksum = AdvancedCheckRevision.FastComputeHash(formula_string, mpq_file_name,
+                                                            System.IO.Path.Combine(m_owner.BinaryDirectory, "Game.exe"), 
+                                                            System.IO.Path.Combine(m_owner.BinaryDirectory, "Bnclient.dll"),
+                                                            System.IO.Path.Combine(m_owner.BinaryDirectory, "D2Client.dll"));
             /*
             switch (CheckRevision.DoCheck(formula_string, mpq_file_name,  m_owner.BinaryDirectory, ref exe_checksum))
             {

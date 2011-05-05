@@ -42,19 +42,19 @@ namespace CSharpClient
 		        "skills.txt"
             };
 
-            String itemDataFile = dataDirectory + "item_data.txt";
+            String itemDataFile = Path.Combine(dataDirectory, "item_data.txt");
             m_itemData = new ItemDataType(itemDataFile);
-            m_experiences = new PlainTextDataType(dataDirectory + fileNames[0]);
-            m_magicalPrefixes = new PlainTextDataType(dataDirectory + fileNames[1]);
-            m_magicalSuffixes = new PlainTextDataType(dataDirectory + fileNames[2]);
-            m_rarePrefixes = new PlainTextDataType(dataDirectory + fileNames[3]);
-            m_rareSuffixes = new PlainTextDataType(dataDirectory + fileNames[4]);
-            m_uniqueItems = new PlainTextDataType(dataDirectory + fileNames[5]);
-            m_monsterNames = new PlainTextDataType(dataDirectory + fileNames[6]);
-            m_monsterFields = new PlainTextDataType(dataDirectory + fileNames[7]);
-            m_superUniques = new PlainTextDataType(dataDirectory + fileNames[8]);
-            m_itemProperties = new PlainTextDataType(dataDirectory + fileNames[9]);
-            m_skills = new PlainTextDataType(dataDirectory + fileNames[10]);
+            m_experiences = new PlainTextDataType(Path.Combine(dataDirectory, fileNames[0]));
+            m_magicalPrefixes = new PlainTextDataType(Path.Combine(dataDirectory, fileNames[1]));
+            m_magicalSuffixes = new PlainTextDataType(Path.Combine(dataDirectory, fileNames[2]));
+            m_rarePrefixes = new PlainTextDataType(Path.Combine(dataDirectory, fileNames[3]));
+            m_rareSuffixes = new PlainTextDataType(Path.Combine(dataDirectory, fileNames[4]));
+            m_uniqueItems = new PlainTextDataType(Path.Combine(dataDirectory, fileNames[5]));
+            m_monsterNames = new PlainTextDataType(Path.Combine(dataDirectory, fileNames[6]));
+            m_monsterFields = new PlainTextDataType(Path.Combine(dataDirectory, fileNames[7]));
+            m_superUniques = new PlainTextDataType(Path.Combine(dataDirectory, fileNames[8]));
+            m_itemProperties = new PlainTextDataType(Path.Combine(dataDirectory, fileNames[9]));
+            m_skills = new PlainTextDataType(Path.Combine(dataDirectory, fileNames[10]));
 
             return;
         }
